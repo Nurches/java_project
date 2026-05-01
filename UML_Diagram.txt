@@ -1,0 +1,382 @@
+@startuml
+title UML Diagram - Research-Oriented University System
+skinparam classAttributeIconSize 0
+
+package enums {
+  enum UserRole
+  enum DegreeLevel
+  enum LessonType
+  enum Language
+  enum CourseType
+  enum RegistrationStatus
+  enum TeacherTitle
+  enum ManagerType
+  enum UrgencyLevel
+  enum CitationFormat
+  enum NewsTopic
+  enum MessageStatus
+}
+
+package exceptions {
+  class AuthenticationException
+  class UserNotFoundException
+  class CreditLimitException
+  class CourseAlreadyRegisteredException
+  class RegistrationException
+  class LowHIndexException
+  class NotResearcherException
+  class ResearchProjectException
+  class ComplaintException
+  class ReportGenerationException
+}
+
+AuthenticationException --|> Exception
+UserNotFoundException --|> Exception
+CreditLimitException --|> Exception
+CourseAlreadyRegisteredException --|> Exception
+RegistrationException --|> Exception
+LowHIndexException --|> Exception
+NotResearcherException --|> Exception
+ResearchProjectException --|> Exception
+ComplaintException --|> Exception
+ReportGenerationException --|> Exception
+
+package users {
+  abstract class User {
+    -id: String
+    -login: String
+    -password: String
+    -name: String
+    -email: String
+    -role: UserRole
+    +authenticate(login: String, password: String): boolean
+    +getRole(): UserRole
+    +toString(): String
+    +equals(obj: Object): boolean
+    +hashCode(): int
+  }
+
+  abstract class Employee {
+    -salary: double
+    -department: String
+    +sendMessage(receiver: Employee, text: String): void
+  }
+
+  class Admin {
+    +addUser(user: User): void
+    +removeUser(user: User): void
+    +updateUser(user: User): void
+  }
+
+  class Student {
+    -major: String
+    -yearOfStudy: int
+    -gpa: double
+    -credits: int
+    -courses: List<Course>
+    -marks: List<Mark>
+    +registerForCourse(course: Course): void
+    +viewCourses(): List<Course>
+    +viewMarks(): List<Mark>
+    +getTranscript(): Transcript
+    +calculateGpa(): double
+  }
+
+  class BachelorStudent
+
+  class GraduateStudent {
+    -supervisor: Researcher
+    -diplomaProject: DiplomaProject
+    +setSupervisor(supervisor: Researcher): void
+  }
+
+  class MasterStudent {
+    -researchPapers: List<ResearchPaper>
+    +getResearchPapers(): List<ResearchPaper>
+    +addResearchPaper(paper: ResearchPaper): void
+    +printPapers(comparator: Comparator<ResearchPaper>): void
+    +calculateHIndex(): int
+    +getTotalCitations(): int
+  }
+
+  class PhDStudent {
+    -researchPapers: List<ResearchPaper>
+    +getResearchPapers(): List<ResearchPaper>
+    +addResearchPaper(paper: ResearchPaper): void
+    +printPapers(comparator: Comparator<ResearchPaper>): void
+    +calculateHIndex(): int
+    +getTotalCitations(): int
+  }
+
+  class Teacher {
+    -title: TeacherTitle
+    -courses: List<Course>
+    +putMark(student: Student, course: Course, mark: Mark): void
+    +sendComplaint(student: Student, text: String, urgency: UrgencyLevel): Complaint
+    +assignCourse(course: Course): void
+  }
+
+  class Manager {
+    -managerType: ManagerType
+    +approveRegistration(registration: CourseRegistration): void
+    +assignTeacherToCourse(teacher: Teacher, course: Course): void
+    +generateReport(): String
+  }
+}
+
+Employee --|> User
+Admin --|> Employee
+Student --|> User
+BachelorStudent --|> Student
+GraduateStudent --|> Student
+MasterStudent --|> GraduateStudent
+PhDStudent --|> GraduateStudent
+Teacher --|> Employee
+Manager --|> Employee
+
+package research {
+  interface Researcher {
+    +getResearchPapers(): List<ResearchPaper>
+    +addResearchPaper(paper: ResearchPaper): void
+    +printPapers(comparator: Comparator<ResearchPaper>): void
+    +calculateHIndex(): int
+    +getTotalCitations(): int
+  }
+
+  class ResearchPaper {
+    -title: String
+    -authors: List<String>
+    -journal: String
+    -pages: int
+    -citations: int
+    -doi: String
+    -publishedDate: LocalDate
+    +getCitation(format: CitationFormat): String
+    +compareTo(other: ResearchPaper): int
+    +toString(): String
+  }
+
+  class ResearchProject {
+    -topic: String
+    -publishedPapers: List<ResearchPaper>
+    -participants: List<Researcher>
+    +addParticipant(participant: Object): void
+    +addPaper(paper: ResearchPaper): void
+  }
+
+  class ResearchJournal {
+    -name: String
+    -subscribers: List<User>
+    -papers: List<ResearchPaper>
+    +subscribe(user: User): void
+    +unsubscribe(user: User): void
+    +publishPaper(paper: ResearchPaper): void
+    +notifySubscribers(paper: ResearchPaper): void
+  }
+
+  class DiplomaProject {
+    -title: String
+    -description: String
+  }
+}
+
+MasterStudent ..|> Researcher
+PhDStudent ..|> Researcher
+ResearchPaper ..|> Comparable
+
+package academic {
+  class Course {
+    -id: String
+    -name: String
+    -credits: int
+    -courseType: CourseType
+    -language: Language
+    -instructors: List<Teacher>
+    -students: List<Student>
+    -lessons: List<Lesson>
+    +addInstructor(teacher: Teacher): void
+    +addStudent(student: Student): void
+    +addLesson(lesson: Lesson): void
+  }
+
+  class Lesson {
+    -id: String
+    -topic: String
+    -lessonType: LessonType
+    -dateTime: LocalDateTime
+  }
+
+  class Mark {
+    -firstAttestation: double
+    -secondAttestation: double
+    -finalExam: double
+    +getTotal(): double
+  }
+
+  class Transcript {
+    -studentId: String
+    -marks: List<Mark>
+    -gpa: double
+  }
+
+  class CourseRegistration {
+    -student: Student
+    -course: Course
+    -status: RegistrationStatus
+  }
+}
+
+package communication {
+  class Message {
+    -sender: User
+    -receiver: User
+    -text: String
+    -status: MessageStatus
+    -sentAt: LocalDateTime
+  }
+
+  class Complaint {
+    -sender: Teacher
+    -targetStudent: Student
+    -text: String
+    -urgencyLevel: UrgencyLevel
+    -createdAt: LocalDateTime
+  }
+
+  class News {
+    -title: String
+    -content: String
+    -topic: NewsTopic
+    -pinned: boolean
+    -comments: List<Comment>
+  }
+
+  class Comment {
+    -author: User
+    -text: String
+    -createdAt: LocalDateTime
+  }
+}
+
+package core {
+  class UniversitySystem {
+    -instance: UniversitySystem
+    -users: List<User>
+    -courses: List<Course>
+    -researchPapers: List<ResearchPaper>
+    -news: List<News>
+    -messages: List<Message>
+    +getInstance(): UniversitySystem
+    +addUser(user: User): void
+    +findUserByLogin(login: String): User
+    +addCourse(course: Course): void
+    +addNews(news: News): void
+    +printAllResearchPapers(comparator: Comparator<ResearchPaper>): void
+  }
+
+  class AuthService {
+    +login(login: String, password: String): User
+  }
+
+  class DataStorage {
+    +save(object: Object, fileName: String): void
+    +load(fileName: String): Object
+  }
+
+  class LogService {
+    +info(message: String): void
+    +error(message: String): void
+  }
+}
+
+package reports {
+  class ReportGenerator {
+    +generateSystemReport(): String
+  }
+}
+
+package patterns {
+  class UserFactory {
+    +createUser(role: UserRole, ...): User
+  }
+}
+
+' Core relationships
+UniversitySystem o-- "0..*" User
+UniversitySystem o-- "0..*" Course
+UniversitySystem o-- "0..*" ResearchPaper
+UniversitySystem o-- "0..*" News
+UniversitySystem o-- "0..*" Message
+AuthService ..> UniversitySystem
+ReportGenerator ..> UniversitySystem
+Admin ..> UniversitySystem
+Manager ..> ReportGenerator
+UserFactory ..> User
+
+' Academic relationships
+Student "0..*" -- "0..*" Course
+Student "0..*" -- "0..*" Mark
+Student --> Transcript
+Course "0..*" -- "0..*" Teacher
+Course "0..*" -- "0..*" Student
+Course "0..*" -- "0..*" Lesson
+CourseRegistration --> Student
+CourseRegistration --> Course
+Manager ..> CourseRegistration
+Manager ..> Course
+Manager ..> Teacher
+Teacher ..> Course
+Teacher ..> Student
+Teacher ..> Mark
+Teacher ..> Complaint
+
+' Research relationships
+GraduateStudent --> Researcher : supervisor
+GraduateStudent --> DiplomaProject
+ResearchProject "0..*" -- "0..*" ResearchPaper
+ResearchProject "0..*" -- "0..*" Researcher
+ResearchJournal "0..*" -- "0..*" User : subscribers
+ResearchJournal "0..*" -- "0..*" ResearchPaper : papers
+ResearchPaper ..> CitationFormat
+
+' Communication relationships
+Message --> User : sender
+Message --> User : receiver
+Complaint --> Teacher
+Complaint --> Student
+News "0..*" -- "0..*" Comment
+Comment --> User : author
+
+package comparators {
+  class StudentGpaComparator
+  class CourseNameComparator
+  class ResearchPaperDateComparator
+  class ResearchPaperCitationsComparator
+  class ResearchPaperPagesComparator
+  class ResearcherCitationsComparator
+  class TeacherRatingComparator
+  class NewsPriorityComparator
+  class StudentAlphabetComparator
+}
+
+StudentGpaComparator ..|> Comparator
+CourseNameComparator ..|> Comparator
+ResearchPaperDateComparator ..|> Comparator
+ResearchPaperCitationsComparator ..|> Comparator
+ResearchPaperPagesComparator ..|> Comparator
+ResearcherCitationsComparator ..|> Comparator
+TeacherRatingComparator ..|> Comparator
+NewsPriorityComparator ..|> Comparator
+StudentAlphabetComparator ..|> Comparator
+
+StudentGpaComparator ..> Student
+CourseNameComparator ..> Course
+ResearchPaperDateComparator ..> ResearchPaper
+ResearchPaperCitationsComparator ..> ResearchPaper
+ResearchPaperPagesComparator ..> ResearchPaper
+ResearcherCitationsComparator ..> Researcher
+TeacherRatingComparator ..> Teacher
+NewsPriorityComparator ..> News
+StudentAlphabetComparator ..> Student
+
+@enduml
