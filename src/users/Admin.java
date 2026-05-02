@@ -1,5 +1,6 @@
 package users;
 
+import core.LogService;
 import core.UniversitySystem;
 import enums.UserRole;
 
@@ -12,15 +13,17 @@ public class Admin extends Employee {
 
     public void addUser(User user) {
         UniversitySystem.getInstance().addUser(user);
+        new LogService().info("Admin added user: " + user.getLogin());
     }
 
     public void removeUser(User user) {
         UniversitySystem.getInstance().removeUser(user);
+        new LogService().info("Admin removed user: " + user.getLogin());
     }
 
-    public void updateUser(User user) {
-        // TODO Implement update strategy once persistence and validation layers are ready.
-        UniversitySystem.getInstance().removeUser(user);
-        UniversitySystem.getInstance().addUser(user);
+    public void updateUser(User oldUser, User updatedUser) {
+        UniversitySystem.getInstance().removeUser(oldUser);
+        UniversitySystem.getInstance().addUser(updatedUser);
+        new LogService().info("Admin updated user: " + oldUser.getLogin());
     }
 }

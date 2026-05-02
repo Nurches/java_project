@@ -13,4 +13,8 @@ public interface Researcher {
     int calculateHIndex();
 
     int getTotalCitations();
+
+    default boolean isResearcherActive() {
+        return true;
+    }
 }

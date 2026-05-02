@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import communication.Message;
+import core.UniversitySystem;
 import users.User;
 
 public class ResearchJournal implements Serializable {
@@ -24,11 +26,11 @@ public class ResearchJournal implements Serializable {
     }
 
     public List<User> getSubscribers() {
-        return subscribers;
+        return new ArrayList<>(subscribers);
     }
 
     public List<ResearchPaper> getPapers() {
-        return papers;
+        return new ArrayList<>(papers);
     }
 
     public void subscribe(User user) {
@@ -47,8 +49,11 @@ public class ResearchJournal implements Serializable {
     }
 
     public void notifySubscribers(ResearchPaper paper) {
-        // TODO Observer pattern notification dispatch to user inbox/notification service
         for (User subscriber : subscribers) {
+            Message notification = new Message(subscriber, subscriber,
+                    "Journal '" + name + "' published: " + paper.getTitle());
+            notification.markAsRead();
+            UniversitySystem.getInstance().addMessage(notification);
             System.out.println("Notify " + subscriber.getName() + ": New paper published -> " + paper.getTitle());
         }
     }

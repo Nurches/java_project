@@ -1,13 +1,18 @@
 package core;
 
 import java.io.Serializable;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import communication.Message;
 import communication.News;
 import research.ResearchPaper;
+import research.Researcher;
+import users.Student;
+import users.Teacher;
 import users.User;
 
 public class UniversitySystem implements Serializable {
@@ -36,7 +41,9 @@ public class UniversitySystem implements Serializable {
     }
 
     public void addUser(User user) {
-        users.add(user);
+        if (user != null && !users.contains(user)) {
+            users.add(user);
+        }
     }
 
     public void removeUser(User user) {
@@ -53,19 +60,27 @@ public class UniversitySystem implements Serializable {
     }
 
     public void addCourse(academic.Course course) {
-        courses.add(course);
+        if (course != null && !courses.contains(course)) {
+            courses.add(course);
+        }
     }
 
     public void addNews(News newItem) {
-        news.add(newItem);
+        if (newItem != null) {
+            news.add(newItem);
+        }
     }
 
     public void addResearchPaper(ResearchPaper paper) {
-        researchPapers.add(paper);
+        if (paper != null && !researchPapers.contains(paper)) {
+            researchPapers.add(paper);
+        }
     }
 
     public void addMessage(Message message) {
-        messages.add(message);
+        if (message != null) {
+            messages.add(message);
+        }
     }
 
     public void printAllResearchPapers(Comparator<ResearchPaper> comparator) {
@@ -74,23 +89,81 @@ public class UniversitySystem implements Serializable {
         sorted.forEach(System.out::println);
     }
 
+    public void printAllResearchersPapers(Comparator<ResearchPaper> comparator) {
+        for (Researcher researcher : getResearchers()) {
+            researcher.printPapers(comparator);
+        }
+    }
+
     public List<User> getUsers() {
-        return users;
+        return new ArrayList<>(users);
     }
 
     public List<academic.Course> getCourses() {
-        return courses;
+        return new ArrayList<>(courses);
     }
 
     public List<ResearchPaper> getResearchPapers() {
-        return researchPapers;
+        return new ArrayList<>(researchPapers);
     }
 
     public List<News> getNews() {
-        return news;
+        return new ArrayList<>(news);
     }
 
     public List<Message> getMessages() {
-        return messages;
+        return new ArrayList<>(messages);
+    }
+
+    public List<Student> getStudents() {
+        List<Student> students = new ArrayList<>();
+        for (User user : users) {
+            if (user instanceof Student student) {
+                students.add(student);
+            }
+        }
+        return students;
+    }
+
+    public List<Teacher> getTeachers() {
+        List<Teacher> teachers = new ArrayList<>();
+        for (User user : users) {
+            if (user instanceof Teacher teacher) {
+                teachers.add(teacher);
+            }
+        }
+        return teachers;
+    }
+
+    public List<Researcher> getResearchers() {
+        List<Researcher> researchers = new ArrayList<>();
+        for (User user : users) {
+            if (user instanceof Researcher researcher && researcher.isResearcherActive()) {
+                researchers.add(researcher);
+            }
+        }
+        return researchers;
+    }
+
+    public Optional<Researcher> getTopCitedResearcherBySchool(String school) {
+        return getResearchers().stream()
+                .filter(r -> r.getResearchPapers().stream().anyMatch(p -> p.getSchool().equalsIgnoreCase(school)))
+                .max(Comparator.comparingInt(Researcher::getTotalCitations));
+    }
+
+    public Optional<Researcher> getTopCitedResearcherOfYear(int year) {
+        return getResearchers().stream()
+                .max(Comparator.comparingInt(r -> citationsForYear(r, year)));
+    }
+
+    public Optional<Researcher> getTopCitedResearcherOfCurrentYear() {
+        return getTopCitedResearcherOfYear(Year.now().getValue());
+    }
+
+    private int citationsForYear(Researcher researcher, int year) {
+        return researcher.getResearchPapers().stream()
+                .filter(p -> p.getPublishedDate().getYear() == year)
+                .mapToInt(ResearchPaper::getCitations)
+                .sum();
     }
 }

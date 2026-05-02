@@ -1,6 +1,8 @@
 package users;
 
 import communication.Message;
+import core.LogService;
+import core.UniversitySystem;
 import enums.UserRole;
 
 public abstract class Employee extends User {
@@ -24,9 +26,10 @@ public abstract class Employee extends User {
         return department;
     }
 
-    public void sendMessage(Employee receiver, String text) {
-        // TODO Integrate with central message service.
+    public Message sendMessage(Employee receiver, String text) {
         Message message = new Message(this, receiver, text);
-        System.out.println("Message sent: " + message.getText());
+        UniversitySystem.getInstance().addMessage(message);
+        new LogService().info(getName() + " sent message to " + receiver.getName());
+        return message;
     }
 }

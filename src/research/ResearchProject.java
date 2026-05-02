@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import exceptions.NotResearcherException;
+import users.Teacher;
 
 public class ResearchProject implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -24,21 +25,32 @@ public class ResearchProject implements Serializable {
     }
 
     public List<ResearchPaper> getPublishedPapers() {
-        return publishedPapers;
+        return new ArrayList<>(publishedPapers);
     }
 
     public List<Researcher> getParticipants() {
-        return participants;
+        return new ArrayList<>(participants);
     }
 
     public void addParticipant(Object participant) throws NotResearcherException {
-        if (!(participant instanceof Researcher)) {
+        if (participant instanceof Teacher teacher && !teacher.isResearcherActive()) {
+            teacher.becomeResearcher();
+        }
+
+        if (!(participant instanceof Researcher researcher)) {
             throw new NotResearcherException("Participant is not a researcher");
         }
-        participants.add((Researcher) participant);
+        if (!researcher.isResearcherActive()) {
+            throw new NotResearcherException("Participant is not an active researcher");
+        }
+        if (!participants.contains(researcher)) {
+            participants.add(researcher);
+        }
     }
 
     public void addPaper(ResearchPaper paper) {
-        publishedPapers.add(paper);
+        if (!publishedPapers.contains(paper)) {
+            publishedPapers.add(paper);
+        }
     }
 }

@@ -14,6 +14,7 @@ public class ResearchPaper implements Comparable<ResearchPaper>, Serializable {
     private String title;
     private List<String> authors;
     private String journal;
+    private String school;
     private int pages;
     private int citations;
     private String doi;
@@ -21,9 +22,15 @@ public class ResearchPaper implements Comparable<ResearchPaper>, Serializable {
 
     public ResearchPaper(String title, List<String> authors, String journal, int pages, int citations, String doi,
             LocalDate publishedDate) {
+        this(title, authors, journal, "UNSPECIFIED", pages, citations, doi, publishedDate);
+    }
+
+    public ResearchPaper(String title, List<String> authors, String journal, String school, int pages, int citations,
+            String doi, LocalDate publishedDate) {
         this.title = title;
         this.authors = new ArrayList<>(authors);
         this.journal = journal;
+        this.school = school;
         this.pages = pages;
         this.citations = citations;
         this.doi = doi;
@@ -40,6 +47,10 @@ public class ResearchPaper implements Comparable<ResearchPaper>, Serializable {
 
     public String getJournal() {
         return journal;
+    }
+
+    public String getSchool() {
+        return school;
     }
 
     public int getPages() {
@@ -81,6 +92,7 @@ public class ResearchPaper implements Comparable<ResearchPaper>, Serializable {
     public String toString() {
         return "ResearchPaper{" +
                 "title='" + title + '\'' +
+                ", school='" + school + '\'' +
                 ", journal='" + journal + '\'' +
                 ", citations=" + citations +
                 ", publishedDate=" + publishedDate +
