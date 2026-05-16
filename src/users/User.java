@@ -3,6 +3,7 @@ package users;
 import java.io.Serializable;
 import java.util.Objects;
 
+import app.security.PasswordHasher;
 import enums.UserRole;
 
 public abstract class User implements Serializable {
@@ -25,7 +26,14 @@ public abstract class User implements Serializable {
     }
 
     public boolean authenticate(String login, String password) {
-        return this.login.equals(login) && this.password.equals(password);
+        if (!this.login.equals(login)) {
+            return false;
+        }
+        return PasswordHasher.verifyPassword(password, this.password);
+    }
+
+    public void setPassword(String rawPassword) {
+        this.password = PasswordHasher.hashPassword(rawPassword);
     }
 
     public UserRole getRole() {

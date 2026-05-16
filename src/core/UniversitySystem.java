@@ -7,16 +7,21 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import academic.CourseRegistration;
+import app.audit.AuditEntry;
+import communication.Complaint;
 import communication.Message;
 import communication.News;
+import research.ResearchJournal;
 import research.ResearchPaper;
+import research.ResearchProject;
 import research.Researcher;
 import users.Student;
 import users.Teacher;
 import users.User;
 
 public class UniversitySystem implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static UniversitySystem instance;
 
     private List<User> users;
@@ -24,6 +29,11 @@ public class UniversitySystem implements Serializable {
     private List<ResearchPaper> researchPapers;
     private List<News> news;
     private List<Message> messages;
+    private List<CourseRegistration> registrations;
+    private List<Complaint> complaints;
+    private List<ResearchProject> researchProjects;
+    private ResearchJournal researchJournal;
+    private List<AuditEntry> auditEntries;
 
     private UniversitySystem() {
         this.users = new ArrayList<>();
@@ -31,6 +41,11 @@ public class UniversitySystem implements Serializable {
         this.researchPapers = new ArrayList<>();
         this.news = new ArrayList<>();
         this.messages = new ArrayList<>();
+        this.registrations = new ArrayList<>();
+        this.complaints = new ArrayList<>();
+        this.researchProjects = new ArrayList<>();
+        this.researchJournal = new ResearchJournal("University Research Journal");
+        this.auditEntries = new ArrayList<>();
     }
 
     public static UniversitySystem getInstance() {
@@ -40,10 +55,49 @@ public class UniversitySystem implements Serializable {
         return instance;
     }
 
-    public void addUser(User user) {
-        if (user != null && !users.contains(user)) {
-            users.add(user);
+    public static void resetInstance() {
+        instance = new UniversitySystem();
+    }
+
+    public static void replaceInstance(UniversitySystem loaded) {
+        instance = loaded;
+        if (loaded.registrations == null) {
+            loaded.registrations = new ArrayList<>();
         }
+        if (loaded.complaints == null) {
+            loaded.complaints = new ArrayList<>();
+        }
+        if (loaded.researchProjects == null) {
+            loaded.researchProjects = new ArrayList<>();
+        }
+        if (loaded.auditEntries == null) {
+            loaded.auditEntries = new ArrayList<>();
+        }
+        if (loaded.researchJournal == null) {
+            loaded.researchJournal = new ResearchJournal("University Research Journal");
+        }
+    }
+
+    public void addUser(User user) {
+        if (user == null) {
+            return;
+        }
+        if (findUserByLogin(user.getLogin()) != null) {
+            throw new IllegalArgumentException("Login already exists: " + user.getLogin());
+        }
+        if (findUserById(user.getId()) != null) {
+            throw new IllegalArgumentException("User id already exists: " + user.getId());
+        }
+        users.add(user);
+    }
+
+    public User findUserById(String id) {
+        for (User user : users) {
+            if (user.getId().equals(id)) {
+                return user;
+            }
+        }
+        return null;
     }
 
     public void removeUser(User user) {
@@ -81,6 +135,54 @@ public class UniversitySystem implements Serializable {
         if (message != null) {
             messages.add(message);
         }
+    }
+
+    public void addRegistration(CourseRegistration registration) {
+        if (registration != null && !registrations.contains(registration)) {
+            registrations.add(registration);
+        }
+    }
+
+    public List<CourseRegistration> getRegistrations() {
+        return new ArrayList<>(registrations);
+    }
+
+    public void addComplaint(Complaint complaint) {
+        if (complaint != null) {
+            complaints.add(complaint);
+        }
+    }
+
+    public List<Complaint> getComplaints() {
+        return new ArrayList<>(complaints);
+    }
+
+    public void addResearchProject(ResearchProject project) {
+        if (project != null && !researchProjects.contains(project)) {
+            researchProjects.add(project);
+        }
+    }
+
+    public List<ResearchProject> getResearchProjects() {
+        return new ArrayList<>(researchProjects);
+    }
+
+    public ResearchJournal getResearchJournal() {
+        return researchJournal;
+    }
+
+    public void setResearchJournal(ResearchJournal journal) {
+        this.researchJournal = journal;
+    }
+
+    public void addAuditEntry(AuditEntry entry) {
+        if (entry != null) {
+            auditEntries.add(entry);
+        }
+    }
+
+    public List<AuditEntry> getAuditEntries() {
+        return new ArrayList<>(auditEntries);
     }
 
     public void printAllResearchPapers(Comparator<ResearchPaper> comparator) {
