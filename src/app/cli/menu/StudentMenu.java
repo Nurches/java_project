@@ -4,14 +4,14 @@ import java.util.List;
 
 import app.cli.CliIO;
 import app.cli.SessionContext;
-import academic.Course;
 import academic.CourseRegistration;
-import academic.Mark;
 import exceptions.LowHIndexException;
+import users.BachelorStudent;
 import users.GraduateStudent;
 import users.MasterStudent;
 import users.PhDStudent;
 import users.Student;
+import users.Teacher;
 
 public class StudentMenu {
     private final CliIO io;
@@ -31,6 +31,7 @@ public class StudentMenu {
                     "Request course registration",
                     "My registrations",
                     "My courses",
+                    "View teachers for course",
                     "My marks",
                     "Transcript / GPA",
                     "Rate teacher",
@@ -38,7 +39,7 @@ public class StudentMenu {
                     "Become researcher",
                     "Leave researcher role",
                     "Research menu",
-                    "Graduate: supervisor",
+                    "4th year: set supervisor",
                     "Graduate: diploma project"));
             try {
                 switch (choice) {
@@ -48,30 +49,31 @@ public class StudentMenu {
                     case 2 -> requestRegistration(student);
                     case 3 -> listMyRegistrations(student);
                     case 4 -> student.viewCourses().forEach(c -> io.println(c.toString()));
-                    case 5 -> student.viewMarks().forEach(m -> io.println("Total=" + m.getTotal()));
-                    case 6 -> {
+                    case 5 -> viewTeachersForCourse();
+                    case 6 -> student.viewMarks().forEach(m -> io.println("Total=" + m.getTotal()));
+                    case 7 -> {
                         io.println(student.getTranscript().toString());
                         io.println("GPA: " + String.format("%.2f", student.getGpa()));
                     }
-                    case 7 -> rateTeacher();
-                    case 8 -> io.println(session.services().reportingService.studentReport(session.currentUser(), student));
-                    case 9 -> {
+                    case 8 -> rateTeacher();
+                    case 9 -> io.println(session.services().reportingService.studentReport(session.currentUser(), student));
+                    case 10 -> {
                         session.services().studentProfileService.becomeResearcher(student);
                         io.println("Researcher mode enabled.");
                     }
-                    case 10 -> {
+                    case 11 -> {
                         session.services().studentProfileService.leaveResearcher(student);
                         io.println("Researcher mode disabled.");
                     }
-                    case 11 -> {
+                    case 12 -> {
                         if (student.isResearcherActive()) {
                             ResearchMenuHelper.researchSubmenu(io, session, student);
                         } else {
                             io.println("Become a researcher first.");
                         }
                     }
-                    case 12 -> setSupervisor();
-                    case 13 -> setDiploma();
+                    case 13 -> setSupervisor();
+                    case 14 -> setDiploma();
                     case 0 -> loop = false;
                     default -> {
                         if (choice != -1) {
@@ -101,6 +103,20 @@ public class StudentMenu {
                 .forEach(r -> io.println(r.getCourse().getId() + " " + r.getStatus()));
     }
 
+    private void viewTeachersForCourse() {
+        String courseId = io.readLine("Course ID: ");
+        List<Teacher> teachers = session.services().studentProfileService.teachersForCourse(session.currentUser(),
+                courseId);
+        if (teachers.isEmpty()) {
+            io.println("No instructors assigned to this course.");
+            return;
+        }
+        teachers.forEach(t -> io.println(t.getName() + " | login=" + t.getLogin()
+                + " | title=" + t.getTitle()
+                + " | rating=" + String.format("%.2f", t.getAverageRating())
+                + " | dept=" + t.getDepartment()));
+    }
+
     private void rateTeacher() {
         String login = io.readLine("Teacher login: ");
         int rating = io.readInt("Rating 1-5: ");
@@ -109,8 +125,12 @@ public class StudentMenu {
     }
 
     private void setSupervisor() throws LowHIndexException {
-        if (!(session.currentUser() instanceof GraduateStudent)) {
-            io.println("Only graduate students.");
+        if (!(session.currentUser() instanceof BachelorStudent bachelor)) {
+            io.println("Only bachelor students can set a supervisor.");
+            return;
+        }
+        if (bachelor.getYearOfStudy() != 4) {
+            io.println("Supervisor is only for 4th year bachelor students (your year: " + bachelor.getYearOfStudy() + ").");
             return;
         }
         String login = io.readLine("Supervisor login (empty to clear): ");
@@ -120,15 +140,15 @@ public class StudentMenu {
 
     private void setDiploma() {
         if (!(session.currentUser() instanceof GraduateStudent)) {
-            io.println("Only graduate students.");
+            io.println("Only graduate students (master/PhD).");
             return;
         }
         String title = io.readLine("Project title: ");
         String desc = io.readLine("Description: ");
         session.services().studentProfileService.setDiplomaProject(session.currentUser(), title, desc);
-        if (session.currentUser() instanceof MasterStudent m) {
+        if (session.currentUser() instanceof MasterStudent) {
             io.println("Diploma set for master student.");
-        } else if (session.currentUser() instanceof PhDStudent p) {
+        } else if (session.currentUser() instanceof PhDStudent) {
             io.println("Diploma set for PhD student.");
         }
     }

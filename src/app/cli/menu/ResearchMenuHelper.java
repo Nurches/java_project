@@ -63,12 +63,20 @@ public final class ResearchMenuHelper {
     }
 
     private static void citationFormat(CliIO io, SessionContext session, Researcher researcher) {
-        if (researcher.getResearchPapers().isEmpty()) {
+        List<ResearchPaper> papers = researcher.getResearchPapers();
+        if (papers.isEmpty()) {
             io.println("No papers.");
             return;
         }
-        ResearchPaper paper = researcher.getResearchPapers().get(0);
+        ResearchPaper paper = io.chooseFromList("Select paper for citation", papers, ResearchPaper::getTitle);
+        if (paper == null) {
+            return;
+        }
+        String formatRaw = io.readLine("Format (PLAIN/APA/MLA): ").trim().toUpperCase();
+        if (formatRaw.isEmpty()) {
+            formatRaw = "PLAIN";
+        }
         io.println(session.services().researchService.citation(paper,
-                enums.CitationFormat.valueOf(io.readLine("Format (PLAIN/APA/MLA): ").toUpperCase())));
+                enums.CitationFormat.valueOf(formatRaw)));
     }
 }

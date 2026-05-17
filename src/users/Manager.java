@@ -1,7 +1,5 @@
 package users;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import academic.Course;
@@ -14,20 +12,16 @@ import enums.ManagerType;
 import enums.UserRole;
 import exceptions.RegistrationException;
 import reports.ReportGenerator;
-import research.ResearchPaper;
-import research.Researcher;
 
-public class Manager extends Employee implements Researcher {
+public class Manager extends Employee {
     private static final long serialVersionUID = 1L;
 
     private ManagerType managerType;
-    private List<ResearchPaper> researchPapers;
 
     public Manager(String id, String login, String password, String name, String email, double salary, String department,
             ManagerType managerType) {
         super(id, login, password, name, email, UserRole.MANAGER, salary, department);
         this.managerType = managerType;
-        this.researchPapers = new ArrayList<>();
     }
 
     public ManagerType getManagerType() {
@@ -39,8 +33,14 @@ public class Manager extends Employee implements Researcher {
         Course course = registration.getCourse();
 
         if (!course.isEligible(student)) {
-            registration.reject("Student major/year does not match course eligibility");
-            throw new RegistrationException("Registration rejected: eligibility mismatch");
+            String reason = String.format(
+                    "Eligibility mismatch: student major='%s', year=%d; course requires major='%s', year=%s",
+                    student.getMajor(),
+                    student.getYearOfStudy(),
+                    course.getIntendedMajor(),
+                    course.getIntendedYearOfStudy() <= 0 ? "any" : String.valueOf(course.getIntendedYearOfStudy()));
+            registration.reject(reason);
+            throw new RegistrationException("Registration rejected: " + reason);
         }
         if (!student.canRegisterForMoreCourses()) {
             registration.reject("Student has reached failed courses limit");
@@ -85,47 +85,5 @@ public class Manager extends Employee implements Researcher {
         List<Teacher> teachers = core.UniversitySystem.getInstance().getTeachers();
         teachers.sort(new TeacherRatingComparator());
         return teachers;
-    }
-
-    @Override
-    public List<ResearchPaper> getResearchPapers() {
-        return new ArrayList<>(researchPapers);
-    }
-
-    @Override
-    public void addResearchPaper(ResearchPaper paper) {
-        if (!researchPapers.contains(paper)) {
-            researchPapers.add(paper);
-        }
-    }
-
-    @Override
-    public void printPapers(Comparator<ResearchPaper> comparator) {
-        List<ResearchPaper> sorted = new ArrayList<>(researchPapers);
-        sorted.sort(comparator);
-        sorted.forEach(System.out::println);
-    }
-
-    @Override
-    public int calculateHIndex() {
-        List<Integer> citations = researchPapers.stream()
-                .map(ResearchPaper::getCitations)
-                .sorted(Comparator.reverseOrder())
-                .toList();
-
-        int h = 0;
-        for (int i = 0; i < citations.size(); i++) {
-            if (citations.get(i) >= i + 1) {
-                h = i + 1;
-            } else {
-                break;
-            }
-        }
-        return h;
-    }
-
-    @Override
-    public int getTotalCitations() {
-        return researchPapers.stream().mapToInt(ResearchPaper::getCitations).sum();
     }
 }

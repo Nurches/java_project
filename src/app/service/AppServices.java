@@ -27,6 +27,7 @@ public class AppServices {
     public final CommentService commentService;
     public final ResearchService researchService;
     public final StudentProfileService studentProfileService;
+    public final EmployeeRequestService employeeRequestService;
 
     public AppServices() {
         authService = new AuthServiceV2(userRepository);
@@ -41,6 +42,7 @@ public class AppServices {
         complaintService = new ComplaintService(rbacService, auditLogger);
         commentService = new CommentService(auditLogger);
         researchService = new ResearchService(rbacService, auditLogger);
-        studentProfileService = new StudentProfileService(rbacService, auditLogger);
+        studentProfileService = new StudentProfileService(courseRepository, rbacService, auditLogger);
+        employeeRequestService = new EmployeeRequestService(rbacService, auditLogger);
     }
 }

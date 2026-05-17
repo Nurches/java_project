@@ -7,6 +7,8 @@ import enums.Language;
 import enums.TeacherTitle;
 import exceptions.CourseAlreadyRegisteredException;
 import exceptions.CreditLimitException;
+import exceptions.LowHIndexException;
+import research.ResearchPaper;
 import users.BachelorStudent;
 import users.Teacher;
 
@@ -15,6 +17,7 @@ public class DomainRulesTest {
         testCreditLimit();
         testEligibilityAndMarking();
         testRatingBounds();
+        testBachelorSupervisorRules();
         System.out.println("DomainRulesTest passed");
     }
 
@@ -59,6 +62,43 @@ public class DomainRulesTest {
         }
         if (!thrown) {
             throw new IllegalStateException("Expected rating bounds exception");
+        }
+    }
+
+    private static void testBachelorSupervisorRules() throws LowHIndexException {
+        BachelorStudent year2 = new BachelorStudent("S4", "s4", "p", "Y2", "s4@u", "CS", 2);
+        Teacher lowH = new Teacher("T3", "t3", "p", "Low", "t3@u", 1000, "CS", enums.TeacherTitle.TUTOR);
+        lowH.becomeResearcher();
+        lowH.addResearchPaper(new ResearchPaper("P", java.util.List.of("A"), "J", "CS", 5, 1, "doi", java.time.LocalDate.now()));
+
+        boolean yearBlocked = false;
+        try {
+            year2.setSupervisor(lowH);
+        } catch (IllegalStateException e) {
+            yearBlocked = true;
+        }
+        if (!yearBlocked) {
+            throw new IllegalStateException("Expected supervisor blocked for non-4th year");
+        }
+
+        BachelorStudent year4 = new BachelorStudent("S5", "s5", "p", "Y4", "s5@u", "CS", 4);
+        boolean lowHBlocked = false;
+        try {
+            year4.setSupervisor(lowH);
+        } catch (LowHIndexException e) {
+            lowHBlocked = true;
+        }
+        if (!lowHBlocked) {
+            throw new IllegalStateException("Expected LowHIndexException");
+        }
+
+        Teacher good = new Teacher("T4", "t4", "p", "Good", "t4@u", 1000, "CS", enums.TeacherTitle.PROFESSOR);
+        good.addResearchPaper(new ResearchPaper("P1", java.util.List.of("A"), "J", "CS", 5, 10, "doi", java.time.LocalDate.now()));
+        good.addResearchPaper(new ResearchPaper("P2", java.util.List.of("A"), "J", "CS", 5, 8, "doi", java.time.LocalDate.now()));
+        good.addResearchPaper(new ResearchPaper("P3", java.util.List.of("A"), "J", "CS", 5, 6, "doi", java.time.LocalDate.now()));
+        year4.setSupervisor(good);
+        if (year4.getSupervisor() != good) {
+            throw new IllegalStateException("Expected supervisor assigned");
         }
     }
 }

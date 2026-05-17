@@ -29,7 +29,8 @@ public class RegistrationService {
     }
 
     public CourseRegistration createRequest(User actor, Student student, String courseId) {
-        rbacService.requireRole(actor, UserRole.STUDENT, UserRole.MANAGER, UserRole.ADMIN);
+        rbacService.requireRole(actor, UserRole.STUDENT, UserRole.BACHELOR_STUDENT, UserRole.MASTER_STUDENT,
+                UserRole.PHD_STUDENT, UserRole.MANAGER, UserRole.ADMIN);
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found: " + courseId));
         CourseRegistration registration = new CourseRegistration(student, course);
@@ -82,8 +83,14 @@ public class RegistrationService {
         Student student = registration.getStudent();
         Course course = registration.getCourse();
         if (!course.isEligible(student)) {
-            registration.reject("Student major/year does not match course eligibility");
-            throw new RegistrationException("Registration rejected: eligibility mismatch");
+            String reason = String.format(
+                    "Eligibility mismatch: student major='%s', year=%d; course requires major='%s', year=%s",
+                    student.getMajor(),
+                    student.getYearOfStudy(),
+                    course.getIntendedMajor(),
+                    course.getIntendedYearOfStudy() <= 0 ? "any" : String.valueOf(course.getIntendedYearOfStudy()));
+            registration.reject(reason);
+            throw new RegistrationException("Registration rejected: " + reason);
         }
         if (!student.canRegisterForMoreCourses()) {
             registration.reject("Student has reached failed courses limit");

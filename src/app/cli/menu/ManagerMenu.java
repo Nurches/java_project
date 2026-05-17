@@ -11,8 +11,8 @@ import enums.NewsTopic;
 import exceptions.RegistrationException;
 import enums.RegistrationStatus;
 import enums.UrgencyLevel;
+import communication.EmployeeRequest;
 import research.ResearchPaper;
-import research.Researcher;
 import users.Manager;
 import users.Student;
 import users.Teacher;
@@ -41,9 +41,12 @@ public class ManagerMenu {
                     "Teachers by rating",
                     "Publish news",
                     "View complaints",
+                    "Employee requests (pending)",
+                    "Sign request as dean",
+                    "Sign request as rector",
+                    "Reject employee request",
                     "Research: top by school",
                     "Research: top this year",
-                    "Add research paper",
                     "Publish paper to journal",
                     "All papers (by citations)",
                     "Create research project",
@@ -64,18 +67,21 @@ public class ManagerMenu {
                             .forEach(t -> io.println(t.getName() + " rating=" + t.getAverageRating()));
                     case 9 -> publishNews();
                     case 10 -> listComplaints();
-                    case 11 -> topBySchool();
-                    case 12 -> topYear();
-                    case 13 -> addPaper(manager);
-                    case 14 -> publishJournal();
-                    case 15 -> session.services().researchService.printAllPapers("citations");
-                    case 16 -> {
+                    case 11 -> listEmployeeRequests();
+                    case 12 -> signEmployeeRequest(true);
+                    case 13 -> signEmployeeRequest(false);
+                    case 14 -> rejectEmployeeRequest();
+                    case 15 -> topBySchool();
+                    case 16 -> topYear();
+                    case 17 -> publishJournal();
+                    case 18 -> session.services().researchService.printAllPapers("citations");
+                    case 19 -> {
                         String topic = io.readLine("Project topic: ");
                         session.services().researchService.createProject(session.currentUser(), topic);
                         io.println("Project created.");
                     }
-                    case 17 -> io.println(session.services().reportingService.systemReport(session.currentUser()));
-                    case 18 -> io.println(session.services().reportingService.marksStats(session.currentUser()));
+                    case 20 -> io.println(session.services().reportingService.systemReport(session.currentUser()));
+                    case 21 -> io.println(session.services().reportingService.marksStats(session.currentUser()));
                     case 0 -> loop = false;
                     default -> {
                         if (choice != -1) {
@@ -158,11 +164,44 @@ public class ManagerMenu {
                         () -> io.println("No researcher found."));
     }
 
-    private void addPaper(Researcher researcher) {
-        ResearchPaper paper = ResearchMenuHelper.createPaper(io, session, researcher);
-        if (paper != null) {
-            io.println("Paper added. h-index=" + researcher.calculateHIndex());
+    private void listEmployeeRequests() {
+        session.services().employeeRequestService.listPending(session.currentUser())
+                .forEach(r -> io.println(formatEmployeeRequest(r)));
+    }
+
+    private void signEmployeeRequest(boolean asDean) {
+        EmployeeRequest request = pickEmployeeRequest();
+        if (request == null) {
+            return;
         }
+        if (asDean) {
+            session.services().employeeRequestService.signAsDean(session.currentUser(), request);
+            io.println("Signed as dean. Status: " + request.getStatus());
+        } else {
+            session.services().employeeRequestService.signAsRector(session.currentUser(), request);
+            io.println("Signed as rector. Status: " + request.getStatus());
+        }
+    }
+
+    private void rejectEmployeeRequest() {
+        EmployeeRequest request = pickEmployeeRequest();
+        if (request == null) {
+            return;
+        }
+        String reason = io.readLine("Rejection reason: ");
+        session.services().employeeRequestService.reject(session.currentUser(), request, reason);
+        io.println("Rejected.");
+    }
+
+    private EmployeeRequest pickEmployeeRequest() {
+        return io.chooseFromList("Pending requests",
+                session.services().employeeRequestService.listPending(session.currentUser()),
+                ManagerMenu::formatEmployeeRequest);
+    }
+
+    private static String formatEmployeeRequest(EmployeeRequest r) {
+        return r.getRequester().getLogin() + " | " + r.getSubject() + " [" + r.getStatus()
+                + "] dean=" + r.isSignedByDean() + " rector=" + r.isSignedByRector();
     }
 
     private void publishJournal() {

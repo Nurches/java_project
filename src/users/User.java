@@ -56,6 +56,24 @@ public abstract class User implements Serializable {
         return email;
     }
 
+    public void setName(String name) {
+        if (name != null && !name.isBlank()) {
+            this.name = name.trim();
+        }
+    }
+
+    public void setEmail(String email) {
+        if (email != null && !email.isBlank()) {
+            this.email = email.trim();
+        }
+    }
+
+    public void setLogin(String login) {
+        if (login != null && !login.isBlank()) {
+            this.login = login.trim();
+        }
+    }
+
     @Override
     public String toString() {
         return "User{" +

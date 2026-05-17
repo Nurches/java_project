@@ -9,6 +9,7 @@ import enums.UserRole;
 import patterns.UserFactory;
 import users.Admin;
 import users.BachelorStudent;
+import users.Student;
 import users.Manager;
 import users.MasterStudent;
 import users.PhDStudent;
@@ -64,6 +65,31 @@ public class UserAdminService {
     public java.util.List<User> listUsers(User actor) {
         rbacService.requireRole(actor, UserRole.ADMIN, UserRole.MANAGER);
         return userRepository.findAll();
+    }
+
+    public void updateUser(User actor, String login, String name, String email, String newPassword, String major,
+            int year) {
+        rbacService.requireRole(actor, UserRole.ADMIN);
+        User user = userRepository.findByLogin(login)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + login));
+        if (name != null && !name.isBlank()) {
+            user.setName(name);
+        }
+        if (email != null && !email.isBlank()) {
+            user.setEmail(email);
+        }
+        if (newPassword != null && !newPassword.isBlank()) {
+            user.setPassword(newPassword);
+        }
+        if (user instanceof Student student) {
+            if (major != null && !major.isBlank()) {
+                student.setMajor(major);
+            }
+            if (year > 0) {
+                student.setYearOfStudy(year);
+            }
+        }
+        auditLogger.log(actor.getLogin(), "UPDATE_USER", "users", "login=" + login);
     }
 
     private User buildUser(UserRole role, String id, String login, String password, String name, String email,

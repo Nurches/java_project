@@ -26,6 +26,7 @@ public class AdminMenu {
             int choice = io.chooseMenu("Admin", List.of(
                     "List users",
                     "Create user",
+                    "Update user",
                     "Delete user",
                     "List courses",
                     "Create course",
@@ -36,12 +37,13 @@ public class AdminMenu {
                 switch (choice) {
                     case 1 -> listUsers();
                     case 2 -> createUser();
-                    case 3 -> deleteUser();
-                    case 4 -> listCourses();
-                    case 5 -> createCourse();
-                    case 6 -> io.println(session.services().reportingService.systemReport(session.currentUser()));
-                    case 7 -> io.println(session.services().reportingService.marksStats(session.currentUser()));
-                    case 8 -> showAudit();
+                    case 3 -> updateUser();
+                    case 4 -> deleteUser();
+                    case 5 -> listCourses();
+                    case 6 -> createCourse();
+                    case 7 -> io.println(session.services().reportingService.systemReport(session.currentUser()));
+                    case 8 -> io.println(session.services().reportingService.marksStats(session.currentUser()));
+                    case 9 -> showAudit();
                     case 0 -> loop = false;
                     default -> {
                         if (choice != -1) {
@@ -83,6 +85,18 @@ public class AdminMenu {
         User created = session.services().userAdminService.createUser(session.currentUser(), role, id, login,
                 password, name, email, major, year, title, mt);
         io.println("Created: " + created.getLogin());
+    }
+
+    private void updateUser() {
+        String login = io.readLine("Login to update: ");
+        String name = io.readLine("New name (empty = keep): ");
+        String email = io.readLine("New email (empty = keep): ");
+        String password = io.readLine("New password (empty = keep): ");
+        String major = io.readLine("Major for students (empty = keep): ");
+        int year = io.readInt("Year for students (0 = keep): ");
+        session.services().userAdminService.updateUser(session.currentUser(), login, name, email, password, major,
+                year);
+        io.println("User updated.");
     }
 
     private void deleteUser() {

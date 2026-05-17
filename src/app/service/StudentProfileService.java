@@ -1,20 +1,28 @@
 package app.service;
 
+import java.util.List;
+
 import app.audit.AuditLogger;
+import app.repository.CourseRepository;
+import academic.Course;
 import enums.UserRole;
 import exceptions.LowHIndexException;
 import research.DiplomaProject;
 import research.Researcher;
+import users.BachelorStudent;
 import users.GraduateStudent;
 import users.Student;
 import users.Teacher;
 import users.User;
 
 public class StudentProfileService {
+    private final CourseRepository courseRepository;
     private final RbacService rbacService;
     private final AuditLogger auditLogger;
 
-    public StudentProfileService(RbacService rbacService, AuditLogger auditLogger) {
+    public StudentProfileService(CourseRepository courseRepository, RbacService rbacService,
+            AuditLogger auditLogger) {
+        this.courseRepository = courseRepository;
         this.rbacService = rbacService;
         this.auditLogger = auditLogger;
     }
@@ -43,29 +51,39 @@ public class StudentProfileService {
     }
 
     public void setSupervisor(User actor, String supervisorLogin) throws LowHIndexException {
-        if (!(actor instanceof GraduateStudent grad)) {
-            throw new IllegalStateException("Only graduate students can set supervisor");
+        if (!(actor instanceof BachelorStudent bachelor)) {
+            throw new IllegalStateException("Only bachelor students can set a supervisor");
         }
         requireSelfStudent(actor);
         if (supervisorLogin == null || supervisorLogin.isBlank()) {
-            grad.setSupervisor(null);
+            bachelor.setSupervisor(null);
             return;
         }
         User sup = core.UniversitySystem.getInstance().findUserByLogin(supervisorLogin);
         if (!(sup instanceof Researcher researcher)) {
-            throw new IllegalArgumentException("Supervisor must be a researcher");
+            throw new IllegalArgumentException("Supervisor must be an active researcher");
         }
-        grad.setSupervisor(researcher);
+        if (!researcher.isResearcherActive()) {
+            throw new IllegalArgumentException("Supervisor must be an active researcher");
+        }
+        bachelor.setSupervisor(researcher);
         auditLogger.log(actor.getLogin(), "SET_SUPERVISOR", "users", supervisorLogin);
     }
 
     public void setDiplomaProject(User actor, String title, String description) {
         if (!(actor instanceof GraduateStudent grad)) {
-            throw new IllegalStateException("Only graduate students can set diploma project");
+            throw new IllegalStateException("Only graduate students can set a diploma project");
         }
         requireSelfStudent(actor);
         grad.setDiplomaProject(new DiplomaProject(title, description));
         auditLogger.log(actor.getLogin(), "SET_DIPLOMA", "users", title);
+    }
+
+    public List<Teacher> teachersForCourse(User actor, String courseId) {
+        requireSelfStudent(actor);
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found: " + courseId));
+        return course.getInstructors();
     }
 
     private void requireSelfStudent(User actor) {

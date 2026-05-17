@@ -10,6 +10,7 @@ import java.util.Optional;
 import academic.CourseRegistration;
 import app.audit.AuditEntry;
 import communication.Complaint;
+import communication.EmployeeRequest;
 import communication.Message;
 import communication.News;
 import research.ResearchJournal;
@@ -21,7 +22,7 @@ import users.Teacher;
 import users.User;
 
 public class UniversitySystem implements Serializable {
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private static UniversitySystem instance;
 
     private List<User> users;
@@ -34,6 +35,7 @@ public class UniversitySystem implements Serializable {
     private List<ResearchProject> researchProjects;
     private ResearchJournal researchJournal;
     private List<AuditEntry> auditEntries;
+    private List<EmployeeRequest> employeeRequests;
 
     private UniversitySystem() {
         this.users = new ArrayList<>();
@@ -46,6 +48,7 @@ public class UniversitySystem implements Serializable {
         this.researchProjects = new ArrayList<>();
         this.researchJournal = new ResearchJournal("University Research Journal");
         this.auditEntries = new ArrayList<>();
+        this.employeeRequests = new ArrayList<>();
     }
 
     public static UniversitySystem getInstance() {
@@ -75,6 +78,9 @@ public class UniversitySystem implements Serializable {
         }
         if (loaded.researchJournal == null) {
             loaded.researchJournal = new ResearchJournal("University Research Journal");
+        }
+        if (loaded.employeeRequests == null) {
+            loaded.employeeRequests = new ArrayList<>();
         }
     }
 
@@ -155,6 +161,25 @@ public class UniversitySystem implements Serializable {
 
     public List<Complaint> getComplaints() {
         return new ArrayList<>(complaints);
+    }
+
+    public void addEmployeeRequest(EmployeeRequest request) {
+        if (request != null && !employeeRequests.contains(request)) {
+            employeeRequests.add(request);
+        }
+    }
+
+    public List<EmployeeRequest> getEmployeeRequests() {
+        return new ArrayList<>(employeeRequests);
+    }
+
+    public EmployeeRequest findEmployeeRequestById(String id) {
+        for (EmployeeRequest request : employeeRequests) {
+            if (request.getId().equals(id)) {
+                return request;
+            }
+        }
+        return null;
     }
 
     public void addResearchProject(ResearchProject project) {

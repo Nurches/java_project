@@ -1,11 +1,14 @@
 package app.cli.menu;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import app.cli.CliIO;
 import app.cli.SessionContext;
+import communication.EmployeeRequest;
 import communication.Message;
 import communication.News;
+import users.BachelorStudent;
 import users.Employee;
 import users.Student;
 import users.User;
@@ -22,14 +25,20 @@ public class CommonMenu {
     public void run() {
         boolean loop = true;
         while (loop) {
-            int choice = io.chooseMenu("Common", List.of(
-                    "Profile",
-                    "News feed",
-                    "Messages"));
+            List<String> options = new ArrayList<>(List.of("Profile", "News feed", "Messages"));
+            if (session.currentUser() instanceof Employee) {
+                options.add("Employee requests");
+            }
+            int choice = io.chooseMenu("Common", options);
             switch (choice) {
                 case 1 -> showProfile();
                 case 2 -> newsMenu();
                 case 3 -> messagesMenu();
+                case 4 -> {
+                    if (session.currentUser() instanceof Employee) {
+                        employeeRequestsMenu();
+                    }
+                }
                 case 0 -> loop = false;
                 default -> io.println("Unknown option");
             }
@@ -50,6 +59,10 @@ public class CommonMenu {
             io.println("Credits: " + s.getCredits());
             io.println("Failed courses: " + s.getFailedCoursesCount());
             io.println("Researcher: " + s.isResearcherActive());
+            if (u instanceof BachelorStudent b && b.getYearOfStudy() == 4) {
+                io.println("Supervisor: " + (b.getSupervisor() == null ? "none"
+                        : ((User) b.getSupervisor()).getName()));
+            }
         }
         if (u instanceof Employee e) {
             io.println("Department: " + e.getDepartment());
@@ -133,14 +146,33 @@ public class CommonMenu {
     }
 
     private void sendMessage() {
-        if (!(session.currentUser() instanceof Employee)) {
-            io.println("Only employees can send messages.");
-            return;
-        }
         String to = io.readLine("Receiver login: ");
         String text = io.readLine("Message: ");
         session.services().messageService.send(session.currentUser(), to, text);
         io.println("Message sent.");
+        io.pause();
+    }
+
+    private void employeeRequestsMenu() {
+        int choice = io.chooseMenu("Employee requests", List.of("Submit request", "My requests"));
+        if (choice == 0) {
+            return;
+        }
+        try {
+            if (choice == 1) {
+                String subject = io.readLine("Subject: ");
+                String description = io.readLine("Description: ");
+                EmployeeRequest req = session.services().employeeRequestService.submit(session.currentUser(), subject,
+                        description);
+                io.println("Submitted: " + req.getId() + " [" + req.getStatus() + "]");
+            } else if (choice == 2) {
+                session.services().employeeRequestService.myRequests(session.currentUser())
+                        .forEach(r -> io.println(r.getSubject() + " | " + r.getStatus()
+                                + " | dean=" + r.isSignedByDean() + " | rector=" + r.isSignedByRector()));
+            }
+        } catch (Exception e) {
+            io.println("Failed: " + e.getMessage());
+        }
         io.pause();
     }
 }

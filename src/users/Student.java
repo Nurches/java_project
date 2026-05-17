@@ -110,6 +110,18 @@ public class Student extends User implements Researcher {
         return yearOfStudy;
     }
 
+    public void setMajor(String major) {
+        if (major != null && !major.isBlank()) {
+            this.major = major.trim();
+        }
+    }
+
+    public void setYearOfStudy(int yearOfStudy) {
+        if (yearOfStudy > 0) {
+            this.yearOfStudy = yearOfStudy;
+        }
+    }
+
     public double getGpa() {
         return gpa;
     }

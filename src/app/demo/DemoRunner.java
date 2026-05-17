@@ -81,7 +81,6 @@ public final class DemoRunner {
             master.addResearchPaper(paper1);
             teacher.addResearchPaper(paper1);
             teacher.addResearchPaper(paper2);
-            manager.addResearchPaper(paper2);
 
             system.addResearchPaper(paper1);
             system.addResearchPaper(paper2);

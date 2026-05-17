@@ -1,23 +1,199 @@
-@startuml
-title UML Diagram - Research-Oriented University System
+' =============================================================================
+' University System - PlantUML diagrams (updated 2026-05)
+' =============================================================================
+' How to render:
+'   1) https://www.plantuml.com/plantuml/uml/  — paste one @startuml block
+'   2) VS Code / Cursor extension "PlantUML" — Alt+D preview (Local + Graphviz)
+'   3) CLI: plantuml -tsvg UML_Diagram.txt   (or -tpng; SVG avoids crop on large diagrams)
+'
+' Graphviz on macOS (Homebrew): brew install graphviz
+'   plantuml.graphvizDot: /opt/homebrew/bin/dot
+'
+' This file contains 5 diagrams:
+'   A) Use Case Diagram
+'   B) Class Diagram (domain + application layer)
+'   C) Component Diagram
+'   D) Sequence — Course registration (approve)
+'   E) Sequence — Citation format (select paper)
+' =============================================================================
+
+
+@startuml UseCaseDiagram
+title Use Case Diagram - University System CLI
+left to right direction
+skinparam packageStyle rectangle
+
+actor Admin
+actor Manager
+actor Teacher
+actor Student as "Student\n(Bachelor/Master/PhD)"
+actor System
+
+rectangle "Authentication & Persistence" {
+  usecase "Login / Logout" as UC_Login
+  usecase "Save/Load state\n(university_system.ser)" as UC_Persist
+  usecase "Run demo scenario\n(--demo)" as UC_Demo
+}
+
+rectangle "Administration" {
+  usecase "Manage users\n(create/update/list/delete)" as UC_Users
+  usecase "Update user profile" as UC_UpdateUser
+  usecase "Manage courses\n(create/list)" as UC_CoursesAdmin
+  usecase "View system report" as UC_SysReport
+  usecase "View audit log" as UC_Audit
+}
+
+rectangle "Registration Office" {
+  usecase "Approve registration" as UC_Approve
+  usecase "Reject registration\n(with reason)" as UC_Reject
+  usecase "Assign teacher to course" as UC_Assign
+  usecase "View students by GPA/alphabet" as UC_SortStudents
+  usecase "View teachers by rating" as UC_SortTeachers
+  usecase "View complaints" as UC_ViewComplaints
+}
+
+rectangle "Teaching" {
+  usecase "View my courses" as UC_MyCourses
+  usecase "Put mark (3 components)" as UC_Mark
+  usecase "File complaint on student" as UC_Complaint
+  usecase "View student report" as UC_StuReport
+}
+
+rectangle "Student Life" {
+  usecase "Browse course catalog" as UC_Catalog
+  usecase "Request course registration" as UC_Request
+  usecase "View my courses/marks/transcript" as UC_MyAcademic
+  usecase "Rate teacher (1-5)" as UC_Rate
+  usecase "Become/leave researcher" as UC_BecomeRes
+  usecase "Set supervisor\n(4th year bachelor)" as UC_Supervisor
+  usecase "Set diploma project\n(master/PhD)" as UC_Diploma
+  usecase "View teachers for course" as UC_CourseTeachers
+}
+
+rectangle "Research" {
+  usecase "Add/view research papers\n(sort by citations/date)" as UC_Papers
+  usecase "Calculate h-index" as UC_HIndex
+  usecase "Export citation\n(select paper, PLAIN/APA/MLA)" as UC_Citation
+  usecase "Top researcher rankings" as UC_TopRes
+  usecase "Subscribe to journal" as UC_Subscribe
+  usecase "Publish paper to journal" as UC_PublishJournal
+  usecase "Create research project" as UC_Project
+}
+
+rectangle "Communication" {
+  usecase "View/publish news" as UC_News
+  usecase "Comment on news" as UC_Comment
+  usecase "Send message\n(any user to any user)" as UC_Message
+  usecase "View profile" as UC_Profile
+}
+
+rectangle "HR / Administration" {
+  usecase "Submit employee request" as UC_EmpReqSubmit
+  usecase "Sign request (dean + rector)" as UC_EmpReqSign
+  usecase "Reject employee request" as UC_EmpReqReject
+}
+
+Admin --> UC_Login
+Admin --> UC_Users
+Admin --> UC_UpdateUser
+Admin --> UC_CoursesAdmin
+Admin --> UC_SysReport
+Admin --> UC_Audit
+Admin --> UC_Profile
+
+Manager --> UC_Login
+Manager --> UC_Approve
+Manager --> UC_Reject
+Manager --> UC_Assign
+Manager --> UC_SortStudents
+Manager --> UC_SortTeachers
+Manager --> UC_News
+Manager --> UC_ViewComplaints
+Manager --> UC_SysReport
+Manager --> UC_TopRes
+Manager --> UC_PublishJournal
+Manager --> UC_Project
+Manager --> UC_EmpReqSign
+Manager --> UC_EmpReqReject
+Manager --> UC_Profile
+Manager --> UC_Message
+Manager --> UC_EmpReqSubmit
+
+Teacher --> UC_Login
+Teacher --> UC_MyCourses
+Teacher --> UC_Mark
+Teacher --> UC_Complaint
+Teacher --> UC_StuReport
+Teacher --> UC_BecomeRes
+Teacher --> UC_Papers
+Teacher --> UC_HIndex
+Teacher --> UC_Citation
+Teacher --> UC_Subscribe
+Teacher --> UC_Profile
+Teacher --> UC_Message
+Teacher --> UC_EmpReqSubmit
+
+Student --> UC_Login
+Student --> UC_Catalog
+Student --> UC_Request
+Student --> UC_CourseTeachers
+Student --> UC_MyAcademic
+Student --> UC_Rate
+Student --> UC_BecomeRes
+Student --> UC_Papers
+Student --> UC_HIndex
+Student --> UC_Citation
+Student --> UC_Subscribe
+Student --> UC_Supervisor
+Student --> UC_Diploma
+Student --> UC_News
+Student --> UC_Comment
+Student --> UC_Profile
+Student --> UC_Message
+
+System --> UC_Persist
+System --> UC_Demo
+
+@enduml
+
+
+@startuml ClassDiagram
+title Class Diagram - Research-Oriented University System
 skinparam classAttributeIconSize 0
 
 package enums {
-  enum UserRole
-  enum DegreeLevel
-  enum LessonType
-  enum Language
+  enum UserRole {
+    ADMIN
+    MANAGER
+    TEACHER
+    STUDENT
+    BACHELOR_STUDENT
+    MASTER_STUDENT
+    PHD_STUDENT
+  }
   enum CourseType
+  enum Language
   enum RegistrationStatus
   enum TeacherTitle
   enum ManagerType
+  enum LessonType
   enum UrgencyLevel
-  enum CitationFormat
+  enum CitationFormat {
+    PLAIN
+    APA
+    MLA
+  }
   enum NewsTopic
   enum MessageStatus
+  enum DegreeLevel
+  enum EmployeeRequestStatus {
+    PENDING
+    APPROVED
+    REJECTED
+  }
 }
 
-package exceptions {
+package exceptions <<Rectangle>> {
   class AuthenticationException
   class UserNotFoundException
   class CreditLimitException
@@ -25,21 +201,10 @@ package exceptions {
   class RegistrationException
   class LowHIndexException
   class NotResearcherException
-  class ResearchProjectException
   class ComplaintException
   class ReportGenerationException
+  class ResearchProjectException
 }
-
-AuthenticationException --|> Exception
-UserNotFoundException --|> Exception
-CreditLimitException --|> Exception
-CourseAlreadyRegisteredException --|> Exception
-RegistrationException --|> Exception
-LowHIndexException --|> Exception
-NotResearcherException --|> Exception
-ResearchProjectException --|> Exception
-ComplaintException --|> Exception
-ReportGenerationException --|> Exception
 
 package users {
   abstract class User {
@@ -49,78 +214,62 @@ package users {
     -name: String
     -email: String
     -role: UserRole
-    +authenticate(login: String, password: String): boolean
+    +authenticate(login, password): boolean
+    +setPassword(rawPassword): void
     +getRole(): UserRole
-    +toString(): String
-    +equals(obj: Object): boolean
-    +hashCode(): int
   }
 
   abstract class Employee {
     -salary: double
     -department: String
-    +sendMessage(receiver: Employee, text: String): void
+    +sendMessage(receiver: Employee, text): Message
   }
 
-  class Admin {
-    +addUser(user: User): void
-    +removeUser(user: User): void
-    +updateUser(user: User): void
-  }
-
+  class Admin
   class Student {
     -major: String
     -yearOfStudy: int
     -gpa: double
     -credits: int
-    -courses: List<Course>
-    -marks: List<Mark>
-    +registerForCourse(course: Course): void
-    +viewCourses(): List<Course>
-    +viewMarks(): List<Mark>
+    -failedCoursesCount: int
+    -researcherActive: boolean
+    +registerForCourse(course): void
+    +becomeResearcher(): void
+    +leaveResearcherRole(): void
+    +rateTeacher(teacher, rating): void
     +getTranscript(): Transcript
     +calculateGpa(): double
   }
-
-  class BachelorStudent
-
-  class GraduateStudent {
+  class BachelorStudent {
     -supervisor: Researcher
+    +setSupervisor(supervisor): void
+    +getSupervisor(): Researcher
+  }
+  class GraduateStudent {
     -diplomaProject: DiplomaProject
-    +setSupervisor(supervisor: Researcher): void
   }
-
-  class MasterStudent {
-    -researchPapers: List<ResearchPaper>
-    +getResearchPapers(): List<ResearchPaper>
-    +addResearchPaper(paper: ResearchPaper): void
-    +printPapers(comparator: Comparator<ResearchPaper>): void
-    +calculateHIndex(): int
-    +getTotalCitations(): int
-  }
-
-  class PhDStudent {
-    -researchPapers: List<ResearchPaper>
-    +getResearchPapers(): List<ResearchPaper>
-    +addResearchPaper(paper: ResearchPaper): void
-    +printPapers(comparator: Comparator<ResearchPaper>): void
-    +calculateHIndex(): int
-    +getTotalCitations(): int
-  }
+  class MasterStudent
+  class PhDStudent
 
   class Teacher {
     -title: TeacherTitle
-    -courses: List<Course>
-    +putMark(student: Student, course: Course, mark: Mark): void
-    +sendComplaint(student: Student, text: String, urgency: UrgencyLevel): Complaint
-    +assignCourse(course: Course): void
+    -researcherActive: boolean
+    +putMark(student, course, mark): void
+    +sendComplaint(student, text, urgency): Complaint
+    +assignCourse(course): void
+    +becomeResearcher(): void
   }
+  class Professor
+  class SeniorLecturer
+  class Tutor
 
   class Manager {
     -managerType: ManagerType
-    +approveRegistration(registration: CourseRegistration): void
-    +assignTeacherToCourse(teacher: Teacher, course: Course): void
-    +generateReport(): String
+    +approveRegistration(reg): void
+    +rejectRegistration(reg, reason): void
+    +assignTeacherToCourse(teacher, course): void
+    +viewStudentsSortedByGpa(): List<Student>
+    +publishNews(news): void
   }
 }
 
@@ -132,98 +281,81 @@ GraduateStudent --|> Student
 MasterStudent --|> GraduateStudent
 PhDStudent --|> GraduateStudent
 Teacher --|> Employee
+Professor --|> Teacher
+SeniorLecturer --|> Teacher
+Tutor --|> Teacher
 Manager --|> Employee
 
 package research {
   interface Researcher {
     +getResearchPapers(): List<ResearchPaper>
-    +addResearchPaper(paper: ResearchPaper): void
-    +printPapers(comparator: Comparator<ResearchPaper>): void
+    +addResearchPaper(paper): void
+    +printPapers(comparator): void
     +calculateHIndex(): int
     +getTotalCitations(): int
+    +isResearcherActive(): boolean
   }
 
   class ResearchPaper {
     -title: String
     -authors: List<String>
     -journal: String
+    -school: String
     -pages: int
     -citations: int
     -doi: String
     -publishedDate: LocalDate
     +getCitation(format: CitationFormat): String
-    +compareTo(other: ResearchPaper): int
-    +toString(): String
   }
 
   class ResearchProject {
     -topic: String
     -publishedPapers: List<ResearchPaper>
     -participants: List<Researcher>
-    +addParticipant(participant: Object): void
-    +addPaper(paper: ResearchPaper): void
+    +addParticipant(participant): void
+    +addPaper(paper): void
   }
 
   class ResearchJournal {
     -name: String
     -subscribers: List<User>
     -papers: List<ResearchPaper>
-    +subscribe(user: User): void
-    +unsubscribe(user: User): void
-    +publishPaper(paper: ResearchPaper): void
-    +notifySubscribers(paper: ResearchPaper): void
+    +subscribe(user): void
+    +publishPaper(paper): void
+    +notifySubscribers(paper): void
   }
 
-  class DiplomaProject {
-    -title: String
-    -description: String
-  }
+  class DiplomaProject
 }
 
-MasterStudent ..|> Researcher
-PhDStudent ..|> Researcher
+Student ..|> Researcher
+Teacher ..|> Researcher
 ResearchPaper ..|> Comparable
+BachelorStudent --> Researcher : supervisor (year 4)
 
 package academic {
   class Course {
     -id: String
     -name: String
     -credits: int
-    -courseType: CourseType
-    -language: Language
-    -instructors: List<Teacher>
-    -students: List<Student>
-    -lessons: List<Lesson>
-    +addInstructor(teacher: Teacher): void
-    +addStudent(student: Student): void
-    +addLesson(lesson: Lesson): void
+    -intendedMajor: String
+    -intendedYearOfStudy: int
+    +isEligible(student): boolean
+    +addInstructor(teacher): void
+    +addStudent(student): void
   }
-
-  class Lesson {
-    -id: String
-    -topic: String
-    -lessonType: LessonType
-    -dateTime: LocalDateTime
-  }
-
-  class Mark {
-    -firstAttestation: double
-    -secondAttestation: double
-    -finalExam: double
-    +getTotal(): double
-  }
-
-  class Transcript {
-    -studentId: String
-    -marks: List<Mark>
-    -gpa: double
-  }
-
   class CourseRegistration {
-    -student: Student
-    -course: Course
     -status: RegistrationStatus
+    -rejectionReason: String
+    +approve(): void
+    +reject(reason): void
   }
+  class Mark {
+    +getTotal(): double
+    +isPassed(): boolean
+  }
+  class Transcript
+  class Lesson
 }
 
 package communication {
@@ -232,151 +364,422 @@ package communication {
     -receiver: User
     -text: String
     -status: MessageStatus
-    -sentAt: LocalDateTime
+    +markAsRead(): void
   }
-
-  class Complaint {
-    -sender: Teacher
-    -targetStudent: Student
-    -text: String
-    -urgencyLevel: UrgencyLevel
-    -createdAt: LocalDateTime
-  }
-
+  class Complaint
   class News {
-    -title: String
-    -content: String
-    -topic: NewsTopic
-    -pinned: boolean
-    -comments: List<Comment>
+    +addComment(comment): void
   }
+  class Comment
 
-  class Comment {
-    -author: User
-    -text: String
-    -createdAt: LocalDateTime
+  class EmployeeRequest {
+    -id: String
+    -requester: Employee
+    -subject: String
+    -status: EmployeeRequestStatus
+    -signedByDean: boolean
+    -signedByRector: boolean
+    +signByDean(): void
+    +signByRector(): void
+    +reject(reason): void
   }
 }
 
 package core {
-  class UniversitySystem {
-    -instance: UniversitySystem
+  class UniversitySystem <<Singleton>> {
     -users: List<User>
     -courses: List<Course>
+    -registrations: List<CourseRegistration>
     -researchPapers: List<ResearchPaper>
+    -researchProjects: List<ResearchProject>
+    -researchJournal: ResearchJournal
+    -complaints: List<Complaint>
     -news: List<News>
     -messages: List<Message>
+    -auditEntries: List<AuditEntry>
+    -employeeRequests: List<EmployeeRequest>
     +getInstance(): UniversitySystem
-    +addUser(user: User): void
-    +findUserByLogin(login: String): User
-    +addCourse(course: Course): void
-    +addNews(news: News): void
-    +printAllResearchPapers(comparator: Comparator<ResearchPaper>): void
+    +replaceInstance(loaded): void
+    +addUser / findUserByLogin
+    +addRegistration / getRegistrations
+    +getTopCitedResearcherBySchool(school)
+    +getTopCitedResearcherOfCurrentYear()
   }
-
-  class AuthService {
-    +login(login: String, password: String): User
-  }
-
   class DataStorage {
-    +save(object: Object, fileName: String): void
-    +load(fileName: String): Object
+    +save(object, fileName): void
+    +load(fileName): Object
   }
-
-  class LogService {
-    +info(message: String): void
-    +error(message: String): void
-  }
+  class AuthService
+  class LogService
 }
 
 package reports {
-  class ReportGenerator {
-    +generateSystemReport(): String
-  }
+  class ReportGenerator
 }
 
 package patterns {
   class UserFactory {
-    +createUser(role: UserRole, ...): User
+    +createUser(role, ...): User
+    +createTeacherByTitle(title, ...): Teacher
   }
 }
 
-' Core relationships
-UniversitySystem o-- "0..*" User
-UniversitySystem o-- "0..*" Course
-UniversitySystem o-- "0..*" ResearchPaper
-UniversitySystem o-- "0..*" News
-UniversitySystem o-- "0..*" Message
-AuthService ..> UniversitySystem
-ReportGenerator ..> UniversitySystem
-Admin ..> UniversitySystem
-Manager ..> ReportGenerator
-UserFactory ..> User
-
-' Academic relationships
-Student "0..*" -- "0..*" Course
-Student "0..*" -- "0..*" Mark
-Student --> Transcript
-Course "0..*" -- "0..*" Teacher
-Course "0..*" -- "0..*" Student
-Course "0..*" -- "0..*" Lesson
-CourseRegistration --> Student
-CourseRegistration --> Course
-Manager ..> CourseRegistration
-Manager ..> Course
-Manager ..> Teacher
-Teacher ..> Course
-Teacher ..> Student
-Teacher ..> Mark
-Teacher ..> Complaint
-
-' Research relationships
-GraduateStudent --> Researcher : supervisor
-GraduateStudent --> DiplomaProject
-ResearchProject "0..*" -- "0..*" ResearchPaper
-ResearchProject "0..*" -- "0..*" Researcher
-ResearchJournal "0..*" -- "0..*" User : subscribers
-ResearchJournal "0..*" -- "0..*" ResearchPaper : papers
-ResearchPaper ..> CitationFormat
-
-' Communication relationships
-Message --> User : sender
-Message --> User : receiver
-Complaint --> Teacher
-Complaint --> Student
-News "0..*" -- "0..*" Comment
-Comment --> User : author
-
 package comparators {
   class StudentGpaComparator
+  class StudentAlphabetComparator
+  class TeacherRatingComparator
   class CourseNameComparator
-  class ResearchPaperDateComparator
   class ResearchPaperCitationsComparator
+  class ResearchPaperDateComparator
   class ResearchPaperPagesComparator
   class ResearcherCitationsComparator
-  class TeacherRatingComparator
   class NewsPriorityComparator
-  class StudentAlphabetComparator
 }
 
-StudentGpaComparator ..|> Comparator
-CourseNameComparator ..|> Comparator
-ResearchPaperDateComparator ..|> Comparator
-ResearchPaperCitationsComparator ..|> Comparator
-ResearchPaperPagesComparator ..|> Comparator
-ResearcherCitationsComparator ..|> Comparator
-TeacherRatingComparator ..|> Comparator
-NewsPriorityComparator ..|> Comparator
-StudentAlphabetComparator ..|> Comparator
+UniversitySystem "1" o-- "0..*" User
+UniversitySystem "1" o-- "0..*" Course
+UniversitySystem "1" o-- "0..*" CourseRegistration
+UniversitySystem "1" o-- "1" ResearchJournal
+UniversitySystem "1" o-- "0..*" ResearchProject
+CourseRegistration --> Student
+CourseRegistration --> Course
+Student "0..*" -- "0..*" Course
+Teacher --> Mark
+Teacher --> Complaint
+GraduateStudent --> DiplomaProject
+UniversitySystem "1" o-- "0..*" EmployeeRequest
+EmployeeRequest --> Employee
+ResearchProject o-- ResearchPaper
+Message --> User : sender / receiver
+News "1" o-- "0..*" Comment
+ResearchPaper ..> CitationFormat : formats
 
-StudentGpaComparator ..> Student
-CourseNameComparator ..> Course
-ResearchPaperDateComparator ..> ResearchPaper
-ResearchPaperCitationsComparator ..> ResearchPaper
-ResearchPaperPagesComparator ..> ResearchPaper
-ResearcherCitationsComparator ..> Researcher
-TeacherRatingComparator ..> Teacher
-NewsPriorityComparator ..> News
-StudentAlphabetComparator ..> Student
+package app.security {
+  class PasswordHasher <<utility>> {
+    +hashPassword(raw): String
+    +verifyPassword(raw, stored): boolean
+  }
+}
+
+package app.audit {
+  class AuditEntry
+  class AuditLogger {
+    +log(actor, action, entity, details): void
+    +recent(limit): List<AuditEntry>
+  }
+}
+
+package app.repository {
+  interface UserRepository
+  interface CourseRepository
+  interface RegistrationRepository
+}
+
+package app.repository.inmemory {
+  class InMemoryUserRepository
+  class InMemoryCourseRepository
+  class InMemoryRegistrationRepository
+}
+
+package app.service {
+  class AppServices {
+    +userRepository: UserRepository
+    +courseRepository: CourseRepository
+    +registrationRepository: RegistrationRepository
+    +rbacService: RbacService
+    +auditLogger: AuditLogger
+    +authService: AuthServiceV2
+    +registrationService: RegistrationService
+    +gradingService: GradingService
+    +newsService: NewsService
+    +reportingService: ReportingService
+    +userAdminService: UserAdminService
+    +courseAdminService: CourseAdminService
+    +messageService: MessageService
+    +complaintService: ComplaintService
+    +commentService: CommentService
+    +researchService: ResearchService
+    +studentProfileService: StudentProfileService
+  }
+
+  class AuthServiceV2 {
+    +login(login, password): User
+  }
+  class RegistrationService {
+    +createRequest(student, courseId)
+    +approve(manager, registration)
+    +reject(manager, registration, reason)
+  }
+  class GradingService
+  class UserAdminService {
+    +updateUser(actor, login, ...)
+  }
+  class CourseAdminService
+  class ResearchService {
+    +addPaper(...)
+    +printResearcherPapers(researcher, sortBy)
+    +citation(paper, format): String
+    +subscribeJournal(actor)
+    +publishToJournal(actor, paper)
+    +topBySchool(school)
+    +createProject(actor, topic)
+  }
+  class StudentProfileService {
+    +setSupervisor(bachelor, ...)
+    +teachersForCourse(actor, courseId)
+  }
+  class MessageService {
+    +send(sender: User, receiverLogin, text): Message
+    +inbox(user): List<Message>
+  }
+  class NewsService
+  class CommentService
+  class ComplaintService
+  class ReportingService
+  class RbacService {
+    +requireRole(actor, roles...)
+  }
+  class BootstrapService {
+    +seedIfEmpty(): void
+  }
+  class EmployeeRequestService {
+    +submit(actor, subject, description)
+    +signAsDean(actor, request)
+    +signAsRector(actor, request)
+    +reject(actor, request, reason)
+  }
+}
+
+package app.launch {
+  class Main {
+    +main(args): void
+  }
+  class AppLauncher {
+    +run(args): void
+  }
+  class DemoRunner {
+    +run(): void
+  }
+}
+
+package app.cli {
+  class ConsoleApp {
+    +run(): void
+  }
+  class CliIO {
+    +chooseMenu(title, options): int
+    +chooseFromList(title, items, label): T
+    +readLine / readInt
+  }
+  class SessionContext {
+    +currentUser(): User
+    +services(): AppServices
+  }
+}
+
+package app.cli.menu {
+  class CommonMenu
+  class AdminMenu
+  class ManagerMenu
+  class TeacherMenu
+  class StudentMenu
+  class ResearchMenuHelper <<utility>> {
+    +researchSubmenu(io, session, researcher)
+    +createPaper(...)
+    -citationFormat(...)
+  }
+}
+
+Main --> AppLauncher
+AppLauncher --> ConsoleApp
+AppLauncher --> DataStorage
+AppLauncher --> BootstrapService
+AppLauncher --> DemoRunner : --demo
+ConsoleApp --> AppServices
+ConsoleApp --> SessionContext
+ConsoleApp --> AdminMenu
+ConsoleApp --> ManagerMenu
+ConsoleApp --> TeacherMenu
+ConsoleApp --> StudentMenu
+ConsoleApp --> CommonMenu
+
+StudentMenu ..> ResearchMenuHelper : researcher submenu
+TeacherMenu ..> ResearchMenuHelper
+
+ResearchMenuHelper ..> CliIO : chooseFromList\n(select paper)
+ResearchMenuHelper ..> ResearchService : citation()
+ResearchService ..> ResearchPaper : getCitation()
+ResearchService ..> UniversitySystem
+
+MessageService ..> UniversitySystem
+MessageService ..> User : any User sender/receiver
+RegistrationService ..> RegistrationRepository
+RegistrationService ..> RbacService
+UserAdminService ..> UserRepository
+InMemoryUserRepository ..|> UserRepository
+InMemoryCourseRepository ..|> CourseRepository
+InMemoryRegistrationRepository ..|> RegistrationRepository
+InMemoryUserRepository ..> UniversitySystem
+
+User ..> PasswordHasher
+AuditLogger ..> UniversitySystem
+ReportGenerator ..> UniversitySystem
+
+@enduml
+
+
+@startuml ComponentDiagram
+title Component Diagram - Layered Architecture
+skinparam componentStyle rectangle
+
+package "Entry" {
+  [Main] as MainC
+  [AppLauncher] as Launcher
+  [DemoRunner]
+}
+
+package "Presentation (CLI)" {
+  [ConsoleApp] as CLI
+  [CliIO]
+  [SessionContext]
+  [CommonMenu]
+  [AdminMenu]
+  [ManagerMenu]
+  [TeacherMenu]
+  [StudentMenu]
+  [ResearchMenuHelper]
+}
+
+package "Application Services" {
+  [AppServices] as Services
+  [AuthServiceV2]
+  [RegistrationService]
+  [GradingService]
+  [UserAdminService]
+  [CourseAdminService]
+  [ResearchService]
+  [StudentProfileService]
+  [MessageService]
+  [NewsService]
+  [CommentService]
+  [ComplaintService]
+  [ReportingService]
+  [RbacService]
+  [BootstrapService]
+  [AuditLogger]
+}
+
+package "Infrastructure" {
+  [UserRepository]
+  [CourseRepository]
+  [RegistrationRepository]
+  [InMemory Repositories]
+  [DataStorage]
+  [PasswordHasher]
+}
+
+package "Domain" {
+  [UniversitySystem\nSingleton] as US
+  [users / academic / research / communication]
+  [ReportGenerator]
+  [UserFactory]
+}
+
+database "university_system.ser" as SER
+cloud "PostgreSQL\n(V1/V2 SQL migrations only)" as PG
+
+MainC --> Launcher
+Launcher --> CLI
+Launcher --> DataStorage
+Launcher --> [BootstrapService]
+Launcher --> [DemoRunner] : optional
+
+CLI --> Services
+CLI --> [CommonMenu]
+CLI --> [AdminMenu]
+CLI --> [ManagerMenu]
+CLI --> [TeacherMenu]
+CLI --> [StudentMenu]
+[StudentMenu] --> [ResearchMenuHelper]
+[TeacherMenu] --> [ResearchMenuHelper]
+[ResearchMenuHelper] --> [CliIO]
+[ResearchMenuHelper] --> [ResearchService]
+
+Services --> [AuthServiceV2]
+Services --> [RegistrationService]
+Services --> [GradingService]
+Services --> [UserAdminService]
+Services --> [CourseAdminService]
+Services --> [ResearchService]
+Services --> [MessageService]
+Services --> [NewsService]
+Services --> [CommentService]
+Services --> [ComplaintService]
+Services --> [ReportingService]
+Services --> [StudentProfileService]
+Services --> [RbacService]
+Services --> [AuditLogger]
+
+[RegistrationService] --> [RegistrationRepository]
+[UserAdminService] --> [UserRepository]
+[CourseAdminService] --> [CourseRepository]
+[InMemory Repositories] --> US
+[users / academic / research / communication] --> US
+DataStorage --> SER
+US ..> PG : not wired in Java yet
+
+@enduml
+
+
+@startuml SequenceRegistration
+title Sequence - Course Registration (request + approve)
+actor Student
+actor Manager
+participant "StudentMenu" as SUI
+participant "ManagerMenu" as MUI
+participant "RegistrationService" as RS
+participant "RbacService" as RBAC
+participant "UniversitySystem" as US
+participant "Manager" as M
+
+Student -> SUI : Request registration (courseId)
+SUI -> RS : createRequest(student, courseId)
+RS -> RBAC : requireRole(STUDENT, BACHELOR_*, MASTER_*, PHD_*)
+RS -> US : addRegistration(PENDING)
+RS --> SUI : CourseRegistration created
+
+Manager -> MUI : Approve registration
+MUI -> RS : approve(manager, registration)
+RS -> M : approveRegistration(reg)
+M -> M : check eligibility, failed limit
+M -> US : registration.approve()
+RS -> Student : registerForCourse(course)
+RS --> MUI : Approved
+
+@enduml
+
+
+@startuml SequenceCitationFormat
+title Sequence - Export Citation (select paper + format)
+actor Researcher as "Student / Teacher / Manager\n(researcherActive)"
+participant "ResearchMenuHelper" as RMH
+participant "CliIO" as IO
+participant "ResearchService" as RS
+participant "ResearchPaper" as RP
+
+Researcher -> RMH : Menu: Citation format
+RMH -> RP : getResearchPapers()
+alt no papers
+  RMH --> Researcher : "No papers."
+else has papers
+  RMH -> IO : chooseFromList(titles)
+  IO --> RMH : selected ResearchPaper
+  RMH -> Researcher : read format (PLAIN/APA/MLA)
+  RMH -> RS : citation(paper, format)
+  RS -> RP : getCitation(format)
+  RP --> RS : formatted string
+  RS --> RMH : citation text
+  RMH --> Researcher : print citation
+end
 
 @enduml

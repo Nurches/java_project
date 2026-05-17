@@ -15,6 +15,6 @@ public interface Researcher {
     int getTotalCitations();
 
     default boolean isResearcherActive() {
-        return true;
+        return false;
     }
 }

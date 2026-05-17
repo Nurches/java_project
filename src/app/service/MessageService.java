@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import app.audit.AuditLogger;
 import communication.Message;
+import core.LogService;
 import core.UniversitySystem;
 import users.Employee;
 import users.User;
@@ -17,17 +18,24 @@ public class MessageService {
     }
 
     public Message send(User sender, String receiverLogin, String text) {
-        if (!(sender instanceof Employee employee)) {
-            throw new SecurityException("Only employees can send messages");
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("Message text cannot be empty");
         }
         User receiver = UniversitySystem.getInstance().findUserByLogin(receiverLogin);
         if (receiver == null) {
-            throw new IllegalArgumentException("Receiver not found");
+            throw new IllegalArgumentException("Receiver not found: " + receiverLogin);
         }
-        if (!(receiver instanceof Employee receiverEmployee)) {
-            throw new IllegalArgumentException("Receiver must be an employee");
+        if (sender.getId().equals(receiver.getId())) {
+            throw new IllegalArgumentException("Cannot send a message to yourself");
         }
-        Message message = employee.sendMessage(receiverEmployee, text);
+        Message message;
+        if (sender instanceof Employee employee && receiver instanceof Employee receiverEmployee) {
+            message = employee.sendMessage(receiverEmployee, text);
+        } else {
+            message = new Message(sender, receiver, text);
+            UniversitySystem.getInstance().addMessage(message);
+            new LogService().info(sender.getName() + " sent message to " + receiver.getName());
+        }
         auditLogger.log(sender.getLogin(), "SEND_MESSAGE", "messages", "to=" + receiverLogin);
         return message;
     }
