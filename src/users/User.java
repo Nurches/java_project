@@ -6,6 +6,10 @@ import java.util.Objects;
 import app.security.PasswordHasher;
 import enums.UserRole;
 
+/**
+ * Base abstract user of the university system.
+ * Stores identity, credentials, and role information shared by all users.
+ */
 public abstract class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -16,15 +20,32 @@ public abstract class User implements Serializable {
     protected String email;
     protected UserRole role;
 
+    /**
+     * Creates a user and hashes the provided raw password.
+     *
+     * @param id unique user identifier
+     * @param login unique login
+     * @param password raw password
+     * @param name display name
+     * @param email email address
+     * @param role system role
+     */
     protected User(String id, String login, String password, String name, String email, UserRole role) {
         this.id = id;
         this.login = login;
-        this.password = password;
+        this.password = PasswordHasher.hashPassword(password);
         this.name = name;
         this.email = email;
         this.role = role;
     }
 
+    /**
+     * Verifies login and password credentials for this user.
+     *
+     * @param login provided login
+     * @param password provided raw password
+     * @return {@code true} if credentials match
+     */
     public boolean authenticate(String login, String password) {
         if (!this.login.equals(login)) {
             return false;
@@ -32,6 +53,11 @@ public abstract class User implements Serializable {
         return PasswordHasher.verifyPassword(password, this.password);
     }
 
+    /**
+     * Replaces the current password with a newly hashed value.
+     *
+     * @param rawPassword raw password to hash and store
+     */
     public void setPassword(String rawPassword) {
         this.password = PasswordHasher.hashPassword(rawPassword);
     }

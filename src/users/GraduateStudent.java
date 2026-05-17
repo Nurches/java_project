@@ -3,6 +3,9 @@ package users;
 import enums.UserRole;
 import research.DiplomaProject;
 
+/**
+ * Represents a graduate-level student with diploma project responsibilities.
+ */
 public class GraduateStudent extends Student {
     private static final long serialVersionUID = 1L;
 

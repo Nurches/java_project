@@ -21,6 +21,10 @@ import users.Student;
 import users.Teacher;
 import users.User;
 
+/**
+ * Central in-memory model of the university.
+ * Stores users, academic data, communication data, and research data.
+ */
 public class UniversitySystem implements Serializable {
     private static final long serialVersionUID = 3L;
     private static UniversitySystem instance;
@@ -51,6 +55,11 @@ public class UniversitySystem implements Serializable {
         this.employeeRequests = new ArrayList<>();
     }
 
+    /**
+     * Returns the shared university system instance.
+     *
+     * @return singleton instance of the system
+     */
     public static UniversitySystem getInstance() {
         if (instance == null) {
             instance = new UniversitySystem();
@@ -84,6 +93,11 @@ public class UniversitySystem implements Serializable {
         }
     }
 
+    /**
+     * Adds a user to the system after checking unique id and login constraints.
+     *
+     * @param user the user to add
+     */
     public void addUser(User user) {
         if (user == null) {
             return;
@@ -262,6 +276,11 @@ public class UniversitySystem implements Serializable {
         return teachers;
     }
 
+    /**
+     * Returns all active researchers currently stored in the system.
+     *
+     * @return list of active researchers
+     */
     public List<Researcher> getResearchers() {
         List<Researcher> researchers = new ArrayList<>();
         for (User user : users) {

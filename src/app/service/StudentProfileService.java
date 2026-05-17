@@ -15,6 +15,10 @@ import users.Student;
 import users.Teacher;
 import users.User;
 
+/**
+ * Handles student-specific profile actions such as researcher mode, supervisor
+ * assignment, diploma project setup, ratings, and course teacher lookup.
+ */
 public class StudentProfileService {
     private final CourseRepository courseRepository;
     private final RbacService rbacService;
@@ -42,14 +46,21 @@ public class StudentProfileService {
     public void rateTeacher(User actor, String teacherLogin, int rating) {
         requireSelfStudent(actor);
         Student student = (Student) actor;
-        Teacher teacher = (Teacher) core.UniversitySystem.getInstance().findUserByLogin(teacherLogin);
-        if (teacher == null) {
+        User target = core.UniversitySystem.getInstance().findUserByLogin(teacherLogin);
+        if (!(target instanceof Teacher teacher)) {
             throw new IllegalArgumentException("Teacher not found");
         }
         student.rateTeacher(teacher, rating);
         auditLogger.log(actor.getLogin(), "RATE_TEACHER", "teachers", teacherLogin + "=" + rating);
     }
 
+    /**
+     * Assigns or clears a supervisor for a bachelor student.
+     *
+     * @param actor the student performing the action
+     * @param supervisorLogin login of the supervisor to assign, or blank to clear
+     * @throws LowHIndexException if supervisor h-index is below the required threshold
+     */
     public void setSupervisor(User actor, String supervisorLogin) throws LowHIndexException {
         if (!(actor instanceof BachelorStudent bachelor)) {
             throw new IllegalStateException("Only bachelor students can set a supervisor");
@@ -70,6 +81,13 @@ public class StudentProfileService {
         auditLogger.log(actor.getLogin(), "SET_SUPERVISOR", "users", supervisorLogin);
     }
 
+    /**
+     * Creates or replaces a diploma project for a graduate student.
+     *
+     * @param actor the student performing the action
+     * @param title diploma project title
+     * @param description diploma project description
+     */
     public void setDiplomaProject(User actor, String title, String description) {
         if (!(actor instanceof GraduateStudent grad)) {
             throw new IllegalStateException("Only graduate students can set a diploma project");

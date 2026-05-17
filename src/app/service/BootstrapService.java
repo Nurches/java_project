@@ -31,7 +31,7 @@ public class BootstrapService {
                 "Data Science", 1);
         master.setPassword("master123");
         Manager manager = new Manager("MN1", "manager", "man123", "Mia Manager", "mia@uni.edu", 4200,
-                "Registrar", ManagerType.REGISTRAR);
+                "Academic Office", ManagerType.DEAN);
         manager.setPassword("man123");
 
         BachelorStudent student2 = new BachelorStudent("S2", "student2", "stud123", "Carol Student", "carol@uni.edu",
@@ -41,7 +41,7 @@ public class BootstrapService {
                 TeacherTitle.SENIOR_LECTURER);
         teacher2.setPassword("teach123");
         Manager manager2 = new Manager("MN2", "manager2", "man123", "Max Manager", "max@uni.edu", 4100,
-                "Science Office", ManagerType.SCIENCE);
+                "Rectorate", ManagerType.RECTOR);
         manager2.setPassword("man123");
 
         system.addUser(admin);

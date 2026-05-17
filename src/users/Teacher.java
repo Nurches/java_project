@@ -15,6 +15,10 @@ import enums.UserRole;
 import research.ResearchPaper;
 import research.Researcher;
 
+/**
+ * Represents a teacher who can teach courses, grade students, receive ratings,
+ * and optionally participate in research.
+ */
 public class Teacher extends Employee implements Researcher {
     private static final long serialVersionUID = 1L;
 
@@ -42,6 +46,13 @@ public class Teacher extends Employee implements Researcher {
         return new ArrayList<>(courses);
     }
 
+    /**
+     * Assigns a mark to a student for one of the teacher's own courses.
+     *
+     * @param student the student being graded
+     * @param course the course in which grading happens
+     * @param mark the mark to assign
+     */
     public void putMark(Student student, Course course, Mark mark) {
         if (!courses.contains(course)) {
             throw new IllegalArgumentException("Teacher is not assigned to this course");
@@ -52,10 +63,23 @@ public class Teacher extends Employee implements Researcher {
         student.addMark(course, mark);
     }
 
+    /**
+     * Creates a complaint against a student.
+     *
+     * @param student the target student
+     * @param text complaint text
+     * @param urgency urgency level
+     * @return created complaint object
+     */
     public Complaint sendComplaint(Student student, String text, UrgencyLevel urgency) {
         return new Complaint(this, student, text, urgency);
     }
 
+    /**
+     * Assigns a course to the teacher and registers the teacher as an instructor.
+     *
+     * @param course the course to assign
+     */
     public void assignCourse(Course course) {
         if (!courses.contains(course)) {
             courses.add(course);
@@ -67,10 +91,16 @@ public class Teacher extends Employee implements Researcher {
         return researcherActive;
     }
 
+    /**
+     * Activates researcher mode for the teacher.
+     */
     public void becomeResearcher() {
         this.researcherActive = true;
     }
 
+    /**
+     * Deactivates researcher mode for non-professor teachers.
+     */
     public void leaveResearcherRole() {
         if (title == TeacherTitle.PROFESSOR) {
             return;
@@ -78,6 +108,12 @@ public class Teacher extends Employee implements Researcher {
         this.researcherActive = false;
     }
 
+    /**
+     * Stores a rating submitted by a student.
+     *
+     * @param student the student who submitted the rating
+     * @param rating teacher rating from 1 to 5
+     */
     public void acceptRating(Student student, int rating) {
         if (rating < 1 || rating > 5) {
             throw new IllegalArgumentException("Rating must be between 1 and 5");
@@ -115,6 +151,11 @@ public class Teacher extends Employee implements Researcher {
     }
 
     @Override
+    /**
+     * Calculates the teacher's h-index from the current research papers list.
+     *
+     * @return h-index, or 0 if researcher mode is inactive
+     */
     public int calculateHIndex() {
         if (!researcherActive) {
             return 0;

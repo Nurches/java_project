@@ -80,7 +80,7 @@ public class AdminMenu {
                 ? TeacherTitle.valueOf(io.readLine("Teacher title (TUTOR/LECTURER/SENIOR_LECTURER/PROFESSOR): ").toUpperCase())
                 : null;
         ManagerType mt = role == UserRole.MANAGER
-                ? ManagerType.valueOf(io.readLine("Manager type (REGISTRAR/ACADEMIC): ").toUpperCase())
+                ? ManagerType.valueOf(io.readLine("Manager type (ACADEMIC/DEAN/HR/RECTOR/SCIENCE/REGISTRAR): ").toUpperCase())
                 : null;
         User created = session.services().userAdminService.createUser(session.currentUser(), role, id, login,
                 password, name, email, major, year, title, mt);
@@ -118,8 +118,10 @@ public class AdminMenu {
         Language lang = Language.valueOf(io.readLine("Language (ENGLISH/KAZAKH/RUSSIAN): ").toUpperCase());
         String major = io.readLine("Intended major: ");
         int year = io.readInt("Intended year: ");
+        int maxStudents = io.readInt("Max students (e.g. 30): ");
+        String prerequisites = io.readLine("Prerequisite course IDs (comma-separated, empty if none): ");
         session.services().courseAdminService.createCourse(session.currentUser(), id, name, credits, type, lang,
-                major, year);
+                major, year, maxStudents, prerequisites);
         io.println("Course created.");
     }
 

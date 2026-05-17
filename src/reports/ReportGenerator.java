@@ -5,10 +5,34 @@ import java.util.DoubleSummaryStatistics;
 import core.UniversitySystem;
 import users.Student;
 
+/**
+ * Generates aggregate reports about the university and student performance.
+ */
 public class ReportGenerator {
+    private final UniversitySystem system;
 
+    /**
+     * Creates a report generator using the shared university system instance.
+     */
+    public ReportGenerator() {
+        this(UniversitySystem.getInstance());
+    }
+
+    /**
+     * Creates a report generator for the provided system instance.
+     *
+     * @param system university system used as a report source
+     */
+    public ReportGenerator(UniversitySystem system) {
+        this.system = system;
+    }
+
+    /**
+     * Builds a high-level report about the current system state.
+     *
+     * @return system report text
+     */
     public String generateSystemReport() {
-        UniversitySystem system = UniversitySystem.getInstance();
         return "System report: users=" + system.getUsers().size() +
                 ", students=" + system.getStudents().size() +
                 ", teachers=" + system.getTeachers().size() +
@@ -18,8 +42,12 @@ public class ReportGenerator {
                 ", news=" + system.getNews().size();
     }
 
+    /**
+     * Builds aggregated statistics for all student marks stored in the system.
+     *
+     * @return marks statistics summary
+     */
     public String generateMarksStatistics() {
-        UniversitySystem system = UniversitySystem.getInstance();
         DoubleSummaryStatistics stats = system.getStudents().stream()
                 .flatMap(student -> student.viewMarks().stream())
                 .mapToDouble(mark -> mark.getTotal())
@@ -45,6 +73,12 @@ public class ReportGenerator {
                 ", atRiskStudents=" + atRiskStudents;
     }
 
+    /**
+     * Builds a compact report for a single student.
+     *
+     * @param student target student
+     * @return student report text
+     */
     public String generateStudentReport(Student student) {
         return "Student report: " + student.getName() +
                 ", gpa=" + String.format("%.2f", student.getGpa()) +

@@ -13,6 +13,10 @@ import enums.UserRole;
 import exceptions.RegistrationException;
 import reports.ReportGenerator;
 
+/**
+ * Represents a manager responsible for registration workflow, academic reporting,
+ * teacher assignment, and administrative sorting and analytics.
+ */
 public class Manager extends Employee {
     private static final long serialVersionUID = 1L;
 
@@ -28,6 +32,31 @@ public class Manager extends Employee {
         return managerType;
     }
 
+    /**
+     * Checks whether this manager is allowed to sign employee requests as dean.
+     *
+     * @return {@code true} if manager type is DEAN
+     */
+    public boolean canSignAsDean() {
+        return managerType == ManagerType.DEAN;
+    }
+
+    /**
+     * Checks whether this manager is allowed to sign employee requests as rector.
+     *
+     * @return {@code true} if manager type is RECTOR
+     */
+    public boolean canSignAsRector() {
+        return managerType == ManagerType.RECTOR;
+    }
+
+    /**
+     * Approves a course registration after validating eligibility, failed-course
+     * limits, prerequisites, and course capacity.
+     *
+     * @param registration the registration request to approve
+     * @throws RegistrationException if any business rule is violated
+     */
     public void approveRegistration(CourseRegistration registration) throws RegistrationException {
         Student student = registration.getStudent();
         Course course = registration.getCourse();
@@ -46,6 +75,17 @@ public class Manager extends Employee {
             registration.reject("Student has reached failed courses limit");
             throw new RegistrationException("Registration rejected: failed courses limit reached");
         }
+        List<String> missingPrerequisites = course.getMissingPrerequisites(student);
+        if (!missingPrerequisites.isEmpty()) {
+            String reason = "Missing prerequisite courses: " + String.join(", ", missingPrerequisites);
+            registration.reject(reason);
+            throw new RegistrationException("Registration rejected: " + reason);
+        }
+        if (!course.hasCapacity()) {
+            String reason = "Course capacity reached";
+            registration.reject(reason);
+            throw new RegistrationException("Registration rejected: " + reason);
+        }
         registration.approve();
     }
 
@@ -53,6 +93,12 @@ public class Manager extends Employee {
         registration.reject(reason);
     }
 
+    /**
+     * Assigns a teacher to a course.
+     *
+     * @param teacher teacher to assign
+     * @param course target course
+     */
     public void assignTeacherToCourse(Teacher teacher, Course course) {
         teacher.assignCourse(course);
     }

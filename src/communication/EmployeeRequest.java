@@ -76,6 +76,9 @@ public class EmployeeRequest implements Serializable {
         if (status == EmployeeRequestStatus.REJECTED) {
             throw new IllegalStateException("Cannot sign a rejected request");
         }
+        if (signedByDean) {
+            throw new IllegalStateException("Request is already signed by dean");
+        }
         signedByDean = true;
         refreshApprovalStatus();
     }
@@ -83,6 +86,9 @@ public class EmployeeRequest implements Serializable {
     public void signByRector() {
         if (status == EmployeeRequestStatus.REJECTED) {
             throw new IllegalStateException("Cannot sign a rejected request");
+        }
+        if (signedByRector) {
+            throw new IllegalStateException("Request is already signed by rector");
         }
         signedByRector = true;
         refreshApprovalStatus();

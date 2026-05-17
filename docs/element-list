@@ -1,0 +1,22 @@
+unnamed package
+academic
+app.audit
+app.cli
+app.cli.menu
+app.config
+app.demo
+app.launch
+app.repository
+app.repository.inmemory
+app.security
+app.service
+communication
+comparators
+core
+enums
+exceptions
+patterns
+reports
+research
+tests
+users

@@ -21,7 +21,7 @@ public class ComplaintService {
     }
 
     public Complaint file(User actor, String studentLogin, String text, UrgencyLevel urgency) {
-        rbacService.requireRole(actor, UserRole.TEACHER, UserRole.ADMIN);
+        rbacService.requireRole(actor, UserRole.TEACHER);
         if (!(actor instanceof Teacher teacher)) {
             throw new SecurityException("Only teachers can file complaints");
         }

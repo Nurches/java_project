@@ -4,6 +4,10 @@ import enums.UserRole;
 import exceptions.LowHIndexException;
 import research.Researcher;
 
+/**
+ * Represents a bachelor student.
+ * A 4th-year bachelor student may be assigned a research supervisor.
+ */
 public class BachelorStudent extends Student {
     private static final long serialVersionUID = 1L;
 
@@ -16,7 +20,11 @@ public class BachelorStudent extends Student {
     }
 
     /**
-     * Per requirements: only 4th-year bachelor students may have a supervisor-researcher.
+     * Assigns a supervisor to a 4th-year bachelor student.
+     *
+     * @param supervisor the researcher who will supervise the student
+     * @throws LowHIndexException if supervisor h-index is less than 3
+     * @throws IllegalStateException if the student is not on the 4th year
      */
     public void setSupervisor(Researcher supervisor) throws LowHIndexException {
         if (yearOfStudy != 4) {

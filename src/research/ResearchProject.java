@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import exceptions.NotResearcherException;
-import users.Teacher;
 
+/**
+ * Represents a research project with a topic, participants, and published papers.
+ */
 public class ResearchProject implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -32,11 +34,13 @@ public class ResearchProject implements Serializable {
         return new ArrayList<>(participants);
     }
 
+    /**
+     * Adds a participant to the project if they satisfy researcher requirements.
+     *
+     * @param participant the participant candidate
+     * @throws NotResearcherException if the participant is not an active researcher
+     */
     public void addParticipant(Object participant) throws NotResearcherException {
-        if (participant instanceof Teacher teacher && !teacher.isResearcherActive()) {
-            teacher.becomeResearcher();
-        }
-
         if (!(participant instanceof Researcher researcher)) {
             throw new NotResearcherException("Participant is not a researcher");
         }

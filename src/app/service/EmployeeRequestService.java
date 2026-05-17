@@ -9,8 +9,12 @@ import core.UniversitySystem;
 import enums.EmployeeRequestStatus;
 import enums.UserRole;
 import users.Employee;
+import users.Manager;
 import users.User;
 
+/**
+ * Handles submission, listing, signing, and rejection of employee requests.
+ */
 public class EmployeeRequestService {
     private final RbacService rbacService;
     private final AuditLogger auditLogger;
@@ -20,6 +24,14 @@ public class EmployeeRequestService {
         this.auditLogger = auditLogger;
     }
 
+    /**
+     * Submits a new employee request on behalf of the acting employee.
+     *
+     * @param actor employee submitting the request
+     * @param subject request subject
+     * @param description request details
+     * @return created employee request
+     */
     public EmployeeRequest submit(User actor, String subject, String description) {
         if (!(actor instanceof Employee employee)) {
             throw new IllegalStateException("Only employees can submit requests");
@@ -46,16 +58,30 @@ public class EmployeeRequestService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Signs an employee request as dean.
+     *
+     * @param actor user performing the signature
+     * @param request request to sign
+     */
     public void signAsDean(User actor, EmployeeRequest request) {
         rbacService.requireRole(actor, UserRole.MANAGER, UserRole.ADMIN);
         requirePending(request);
+        requireDeanSigner(actor);
         request.signByDean();
         auditLogger.log(actor.getLogin(), "EMPLOYEE_REQUEST_DEAN_SIGN", "employee_requests", request.getId());
     }
 
+    /**
+     * Signs an employee request as rector.
+     *
+     * @param actor user performing the signature
+     * @param request request to sign
+     */
     public void signAsRector(User actor, EmployeeRequest request) {
         rbacService.requireRole(actor, UserRole.MANAGER, UserRole.ADMIN);
         requirePending(request);
+        requireRectorSigner(actor);
         request.signByRector();
         auditLogger.log(actor.getLogin(), "EMPLOYEE_REQUEST_RECTOR_SIGN", "employee_requests", request.getId());
     }
@@ -73,6 +99,24 @@ public class EmployeeRequestService {
         }
         if (request.getStatus() != EmployeeRequestStatus.PENDING) {
             throw new IllegalStateException("Request is not pending");
+        }
+    }
+
+    private void requireDeanSigner(User actor) {
+        if (actor.getRole() == UserRole.ADMIN) {
+            return;
+        }
+        if (!(actor instanceof Manager manager) || !manager.canSignAsDean()) {
+            throw new SecurityException("Only a dean-capable manager or admin can sign as dean");
+        }
+    }
+
+    private void requireRectorSigner(User actor) {
+        if (actor.getRole() == UserRole.ADMIN) {
+            return;
+        }
+        if (!(actor instanceof Manager manager) || !manager.canSignAsRector()) {
+            throw new SecurityException("Only a rector-capable manager or admin can sign as rector");
         }
     }
 }

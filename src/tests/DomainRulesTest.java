@@ -8,8 +8,10 @@ import enums.TeacherTitle;
 import exceptions.CourseAlreadyRegisteredException;
 import exceptions.CreditLimitException;
 import exceptions.LowHIndexException;
+import exceptions.RegistrationException;
 import research.ResearchPaper;
 import users.BachelorStudent;
+import users.Manager;
 import users.Teacher;
 
 public class DomainRulesTest {
@@ -18,6 +20,8 @@ public class DomainRulesTest {
         testEligibilityAndMarking();
         testRatingBounds();
         testBachelorSupervisorRules();
+        testPrerequisites();
+        testCourseCapacity();
         System.out.println("DomainRulesTest passed");
     }
 
@@ -99,6 +103,57 @@ public class DomainRulesTest {
         year4.setSupervisor(good);
         if (year4.getSupervisor() != good) {
             throw new IllegalStateException("Expected supervisor assigned");
+        }
+    }
+
+    private static void testPrerequisites() throws Exception {
+        BachelorStudent s = new BachelorStudent("S6", "s6", "p", "Student6", "s6@u", "CS", 4);
+        Teacher t = new Teacher("T5", "t5", "p", "Teacher5", "t5@u", 1000, "CS", TeacherTitle.PROFESSOR);
+        Manager m = new Manager("M1", "m1", "p", "Manager1", "m1@u", 1000, "Office", enums.ManagerType.ACADEMIC);
+
+        Course oop1 = new Course("OOP1", "OOP-1", 5, CourseType.MAJOR, Language.ENGLISH, "CS", 4);
+        Course oop2 = new Course("OOP2", "OOP-2", 5, CourseType.MAJOR, Language.ENGLISH, "CS", 4, 30,
+                java.util.List.of("OOP1"));
+        t.assignCourse(oop1);
+        t.assignCourse(oop2);
+
+        academic.CourseRegistration blocked = new academic.CourseRegistration(s, oop2);
+        boolean prerequisiteBlocked = false;
+        try {
+            m.approveRegistration(blocked);
+        } catch (RegistrationException e) {
+            prerequisiteBlocked = true;
+        }
+        if (!prerequisiteBlocked) {
+            throw new IllegalStateException("Expected prerequisite rejection");
+        }
+
+        s.registerForCourse(oop1);
+        t.putMark(s, oop1, new Mark(30, 30, 30));
+        academic.CourseRegistration allowed = new academic.CourseRegistration(s, oop2);
+        m.approveRegistration(allowed);
+        if (allowed.getStatus() != enums.RegistrationStatus.APPROVED) {
+            throw new IllegalStateException("Expected prerequisite-approved registration");
+        }
+    }
+
+    private static void testCourseCapacity() throws Exception {
+        BachelorStudent s1 = new BachelorStudent("S7", "s7", "p", "Student7", "s7@u", "CS", 4);
+        BachelorStudent s2 = new BachelorStudent("S8", "s8", "p", "Student8", "s8@u", "CS", 4);
+        Manager m = new Manager("M2", "m2", "p", "Manager2", "m2@u", 1000, "Office", enums.ManagerType.ACADEMIC);
+        Course limited = new Course("CAP1", "Limited", 5, CourseType.MAJOR, Language.ENGLISH, "CS", 4, 1,
+                java.util.List.of());
+
+        s1.registerForCourse(limited);
+        academic.CourseRegistration second = new academic.CourseRegistration(s2, limited);
+        boolean capacityBlocked = false;
+        try {
+            m.approveRegistration(second);
+        } catch (RegistrationException e) {
+            capacityBlocked = true;
+        }
+        if (!capacityBlocked) {
+            throw new IllegalStateException("Expected capacity rejection");
         }
     }
 }

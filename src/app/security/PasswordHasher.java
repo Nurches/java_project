@@ -30,9 +30,8 @@ public final class PasswordHasher {
         if (storedHash == null || storedHash.isBlank()) {
             return false;
         }
-
         if (!storedHash.startsWith("pbkdf2$")) {
-            return storedHash.equals(rawPassword);
+            throw new IllegalArgumentException("Stored password is not hashed with the expected format");
         }
 
         String[] parts = storedHash.split("\\$");

@@ -15,6 +15,10 @@ import exceptions.CreditLimitException;
 import research.ResearchPaper;
 import research.Researcher;
 
+/**
+ * Represents a student who can enroll in courses, receive marks, calculate GPA,
+ * and optionally participate in research activity.
+ */
 public class Student extends User implements Researcher {
     private static final long serialVersionUID = 1L;
 
@@ -43,6 +47,13 @@ public class Student extends User implements Researcher {
         this.researchPapers = new ArrayList<>();
     }
 
+    /**
+     * Registers the student for a course if duplicate and credit-limit checks pass.
+     *
+     * @param course the course to register for
+     * @throws CreditLimitException if total credits would exceed 21
+     * @throws CourseAlreadyRegisteredException if the student is already enrolled
+     */
     public void registerForCourse(Course course) throws CreditLimitException, CourseAlreadyRegisteredException {
         if (courses.contains(course)) {
             throw new CourseAlreadyRegisteredException("Student is already registered for this course");
@@ -67,6 +78,11 @@ public class Student extends User implements Researcher {
         return new Transcript(id, marks, calculateGpa());
     }
 
+    /**
+     * Recalculates GPA based on the student's current marks.
+     *
+     * @return GPA on a 4.0 scale
+     */
     public double calculateGpa() {
         if (marks.isEmpty()) {
             gpa = 0.0;
@@ -78,6 +94,13 @@ public class Student extends User implements Researcher {
         return gpa;
     }
 
+    /**
+     * Adds or replaces a mark for the given course and refreshes GPA and failed
+     * course statistics.
+     *
+     * @param course the course for which the mark is assigned
+     * @param mark the mark to store
+     */
     public void addMark(Course course, Mark mark) {
         Mark previous = marksByCourse.put(course.getId(), mark);
         if (previous != null) {
@@ -96,6 +119,14 @@ public class Student extends User implements Researcher {
 
     public boolean hasCourse(Course course) {
         return courses.contains(course);
+    }
+
+    public boolean hasPassedCourse(String courseId) {
+        if (courseId == null || courseId.isBlank()) {
+            return false;
+        }
+        Mark mark = marksByCourse.get(courseId.trim());
+        return mark != null && mark.isPassed();
     }
 
     public void rateTeacher(Teacher teacher, int rating) {
@@ -134,14 +165,25 @@ public class Student extends User implements Researcher {
         return failedCoursesCount;
     }
 
+    /**
+     * Checks whether the student is still eligible to register for new courses.
+     *
+     * @return {@code true} if failed courses count is below the limit
+     */
     public boolean canRegisterForMoreCourses() {
         return failedCoursesCount < 3;
     }
 
+    /**
+     * Activates researcher mode for the student.
+     */
     public void becomeResearcher() {
         this.researcherActive = true;
     }
 
+    /**
+     * Deactivates researcher mode for the student.
+     */
     public void leaveResearcherRole() {
         this.researcherActive = false;
     }
@@ -152,6 +194,12 @@ public class Student extends User implements Researcher {
     }
 
     @Override
+    /**
+     * Adds a research paper to the student's profile.
+     *
+     * @param paper the paper to add
+     * @throws IllegalStateException if researcher mode is not active
+     */
     public void addResearchPaper(ResearchPaper paper) {
         if (!researcherActive) {
             throw new IllegalStateException("Student is not an active researcher");
@@ -172,6 +220,11 @@ public class Student extends User implements Researcher {
     }
 
     @Override
+    /**
+     * Calculates the h-index from the student's research papers.
+     *
+     * @return the h-index, or 0 if researcher mode is inactive
+     */
     public int calculateHIndex() {
         if (!researcherActive) {
             return 0;

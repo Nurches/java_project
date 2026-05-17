@@ -1,7 +1,6 @@
 package app.service;
 
 import enums.UserRole;
-import users.Student;
 import users.User;
 
 public class RbacService {
@@ -18,11 +17,8 @@ public class RbacService {
         if (user.getRole() == role) {
             return true;
         }
-        if (role == UserRole.STUDENT && user instanceof Student) {
-            return true;
-        }
-        return switch (role) {
-            case BACHELOR_STUDENT, MASTER_STUDENT, PHD_STUDENT -> user instanceof Student;
+        return role == UserRole.STUDENT && switch (user.getRole()) {
+            case STUDENT, BACHELOR_STUDENT, MASTER_STUDENT, PHD_STUDENT -> true;
             default -> false;
         };
     }

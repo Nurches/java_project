@@ -31,6 +31,7 @@ public class UserAdminService {
     public User createUser(User actor, UserRole role, String id, String login, String password, String name,
             String email, String major, int year, TeacherTitle teacherTitle, ManagerType managerType) {
         rbacService.requireRole(actor, UserRole.ADMIN);
+        validateNewUserInput(role, id, login, password, name, email, major, year);
         UniversitySystem system = UniversitySystem.getInstance();
         if (system.findUserByLogin(login) != null) {
             throw new IllegalArgumentException("Login already taken: " + login);
@@ -39,7 +40,6 @@ public class UserAdminService {
             throw new IllegalArgumentException("User id already taken: " + id);
         }
         User user = buildUser(role, id, login, password, name, email, major, year, teacherTitle, managerType);
-        user.setPassword(password);
         userRepository.save(user);
         auditLogger.log(actor.getLogin(), "CREATE_USER", "users", "login=" + login + ",role=" + role);
         return user;
@@ -86,6 +86,7 @@ public class UserAdminService {
                 student.setMajor(major);
             }
             if (year > 0) {
+                validateStudentYear(year);
                 student.setYearOfStudy(year);
             }
         }
@@ -105,5 +106,37 @@ public class UserAdminService {
             case MANAGER -> new Manager(id, login, password, name, email, 4200.0, "Office",
                     managerType != null ? managerType : ManagerType.REGISTRAR);
         };
+    }
+
+    private void validateNewUserInput(UserRole role, String id, String login, String password, String name,
+            String email, String major, int year) {
+        requireNonBlank(id, "User id");
+        requireNonBlank(login, "Login");
+        requireNonBlank(password, "Password");
+        requireNonBlank(name, "Name");
+        requireNonBlank(email, "Email");
+        if (isStudentRole(role)) {
+            requireNonBlank(major, "Student major");
+            validateStudentYear(year);
+        }
+    }
+
+    private boolean isStudentRole(UserRole role) {
+        return switch (role) {
+            case STUDENT, BACHELOR_STUDENT, MASTER_STUDENT, PHD_STUDENT -> true;
+            default -> false;
+        };
+    }
+
+    private void validateStudentYear(int year) {
+        if (year <= 0 || year > 8) {
+            throw new IllegalArgumentException("Year of study must be between 1 and 8");
+        }
+    }
+
+    private void requireNonBlank(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " is required");
+        }
     }
 }

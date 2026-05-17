@@ -20,6 +20,10 @@ import research.ResearchProject;
 import research.Researcher;
 import users.User;
 
+/**
+ * Provides research-related application services such as paper management,
+ * project creation, journal subscription, and research analytics.
+ */
 public class ResearchService {
     private final RbacService rbacService;
     private final AuditLogger auditLogger;
@@ -29,6 +33,21 @@ public class ResearchService {
         this.auditLogger = auditLogger;
     }
 
+    /**
+     * Creates a paper, adds it to a researcher's profile, and stores it in the system.
+     *
+     * @param actor the user performing the action
+     * @param researcher the target researcher
+     * @param title paper title
+     * @param authors paper authors
+     * @param journal journal name
+     * @param school school or research area
+     * @param pages article length in pages
+     * @param citations citation count
+     * @param doi DOI identifier
+     * @param date publication date
+     * @return created research paper
+     */
     public ResearchPaper addPaper(User actor, Researcher researcher, String title, List<String> authors,
             String journal, String school, int pages, int citations, String doi, LocalDate date) {
         requireResearcher(actor, researcher);
@@ -65,6 +84,13 @@ public class ResearchService {
         return UniversitySystem.getInstance().getTopCitedResearcherOfCurrentYear();
     }
 
+    /**
+     * Creates a research project with the provided topic.
+     *
+     * @param actor the user creating the project
+     * @param topic project topic
+     * @return created research project
+     */
     public ResearchProject createProject(User actor, String topic) {
         rbacService.requireRole(actor, UserRole.MANAGER, UserRole.ADMIN, UserRole.TEACHER);
         ResearchProject project = new ResearchProject(topic);
@@ -73,6 +99,14 @@ public class ResearchService {
         return project;
     }
 
+    /**
+     * Adds a participant to a research project.
+     *
+     * @param actor the user performing the action
+     * @param project target project
+     * @param participant participant candidate
+     * @throws NotResearcherException if the participant does not satisfy project rules
+     */
     public void addParticipant(User actor, ResearchProject project, Object participant) throws NotResearcherException {
         rbacService.requireRole(actor, UserRole.MANAGER, UserRole.ADMIN, UserRole.TEACHER);
         project.addParticipant(participant);
